@@ -1,0 +1,14 @@
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# Backend
+backend/.gradle/
+backend/build/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+*.iml
+.vite/
