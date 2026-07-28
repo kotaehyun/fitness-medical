@@ -1,6 +1,5 @@
 package com.fitnessmedical.entity;
 
-import com.fitnessmedical.entity.Member;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 
