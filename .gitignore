@@ -12,3 +12,4 @@ backend/build/
 .DS_Store
 *.iml
 .vite/
+.claude/

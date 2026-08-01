@@ -3,6 +3,7 @@ package com.fitnessmedical.controller;
 import com.fitnessmedical.dto.feedback.FeedbackResponse;
 import com.fitnessmedical.dto.health.HealthRecordRequest;
 import com.fitnessmedical.dto.health.HealthRecordResponse;
+import com.fitnessmedical.dto.member.MemberCreateRequest;
 import com.fitnessmedical.dto.member.MemberResponse;
 import com.fitnessmedical.service.FeedbackService;
 import com.fitnessmedical.service.HealthRecordService;
@@ -63,5 +64,13 @@ public class MemberController {
     @GetMapping("/{memberId}/feedback")
     public List<FeedbackResponse> getFeedback(@PathVariable Long memberId) {
         return feedbackService.findByMemberId(memberId);
+    }
+
+    // POST /api/members 요청을 처리합니다. (클래스 레벨 경로 그대로 사용, 추가 경로 없음)
+    @PostMapping
+    // 등록 성공 상태 코드 201을 반환합니다. (createRecord()랑 동일한 패턴)
+    @ResponseStatus(HttpStatus.CREATED)
+    public MemberResponse createMember(@Valid @RequestBody MemberCreateRequest request){
+        return memberService.create(request);
     }
 }

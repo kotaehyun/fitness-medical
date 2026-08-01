@@ -1,8 +1,10 @@
 package com.fitnessmedical.service;
 
 import com.fitnessmedical.common.ResourceNotFoundException;
+import com.fitnessmedical.dto.member.MemberCreateRequest;
 import com.fitnessmedical.dto.member.MemberResponse;
 import com.fitnessmedical.entity.Member;
+import com.fitnessmedical.entity.MemberStatus;
 import com.fitnessmedical.repository.MemberRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,5 +46,29 @@ public class MemberService {
         // 값이 없으면 orElseThrow를 통해 공통 404 예외를 발생시킵니다.
         return memberRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("회원을 찾을 수 없습니다."));
+    }
+
+    // 클래스 전체엔 @Transactional(readOnly = true)가 적용되어 있으니
+    // 데이터를 저장(변경)하는 이 메서드는 개별 @Transactional을 다시 붙여서 덮어씁니다.
+    @Transactional
+    public MemberResponse create(MemberCreateRequest request) {
+
+        // 1. 요청 DTO 값 7개 + 서버가 정하는 기본값 2개(status, lastMeasuredDate)로 Entity를 만듭니다.
+        //    Member 생성자 순서: name, gender, age, height, weight, goal, progress, status, lastMeasuredDate
+        Member member = new Member(
+                request.name(), request.gender(), request.age(),
+                request.height(), request.weight(), request.goal(), request.progress(),
+                MemberStatus.CHECK_REQUIRED, // 서버 기본값: 아직 측정 이력이 없으니 "확인 필요"로 시작
+                null                          // 서버 기본값: 최근 측정일은 아직 없음
+
+        );
+
+        // 2. save()가 INSERT를 수행하고, DB가 채운 id 포함한 Entity를 돌려줍니다.
+        Member saved = memberRepository.save(member);
+
+        // 3. 저장된 Entity를 응답 DTO로 바꿔서 반환합니다. (Entity를 그대로 반환하지 않는 이유는
+        //    MemberResponse 파일 주석에 있던 것 기억나시죠 — DB 구조와 API를 분리하기 위해서예요.)
+        return MemberResponse.from(saved);
+
     }
 }
