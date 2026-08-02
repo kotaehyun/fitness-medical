@@ -3,6 +3,7 @@ package com.fitnessmedical.service;
 import com.fitnessmedical.common.ResourceNotFoundException;
 import com.fitnessmedical.dto.member.MemberCreateRequest;
 import com.fitnessmedical.dto.member.MemberResponse;
+import com.fitnessmedical.dto.member.MemberUpdateRequest;
 import com.fitnessmedical.entity.Member;
 import com.fitnessmedical.entity.MemberStatus;
 import com.fitnessmedical.repository.MemberRepository;
@@ -70,5 +71,32 @@ public class MemberService {
         //    MemberResponse 파일 주석에 있던 것 기억나시죠 — DB 구조와 API를 분리하기 위해서예요.)
         return MemberResponse.from(saved);
 
+    }
+
+    @Transactional
+    public MemberResponse update(Long memberId, MemberUpdateRequest request) {
+        // 1. 기존 회원을 조회합니다. 없으면 getMember() 안에서 이미 404 예외를 던져줍니다.
+        Member member = getMember(memberId);
+
+        // 2. 조회된 Entity의 값을 바꿉니다.
+        member.changeGoal(request.goal(), request.progress());
+
+        // 3. 여기선 memberRepository.save()를 따로 호출하지 않습니다!
+        //    @Transactional 메서드 안에서 조회한 Entity는 JPA가 "영속 상태"로 계속 감시하고 있어서,
+        //    메서드가 끝나고 트랜잭션이 커밋되는 시점에 바뀐 값을 JPA가 알아서 UPDATE 쿼리로 반영해줍니다.
+        //    이걸 "더티 체킹(dirty checking)"이라고 불러요. create()에서 save()를 호출했던 것과
+        //    비교되는 부분이니 기억해두시면 좋아요.
+        return MemberResponse.from(member);
+    }
+
+    // 클래스 전체엔 readOnly=true가 적용되어 있으니, 삭제하는 이 메서드도 개별 @Transactional이 필요합니다.
+    @Transactional
+    public void delete(Long memberId) {
+        // 1. 기존 회원을 조회합니다. 없으면 getMember() 안에서 이미 404 예외를 던져줍니다.
+        Member member = getMember(memberId);
+
+        // 2. 조회한 Entity를 그대로 삭제합니다.
+        //    JpaRepository가 기본 제공하는 delete(T entity) 메서드입니다.
+        memberRepository.delete(member);
     }
 }

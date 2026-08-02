@@ -74,4 +74,14 @@ public class Member {
     public int getProgress() { return progress; }
     public MemberStatus getStatus() { return status; }
     public LocalDate getLastMeasuredDate() { return lastMeasuredDate; }
+
+    // 목표와 진행률을 함계 변경합니다.
+    // 값 하나하나를 여는 Setter 대신 "무엇을 하는 변경인지"가 드러나는 이름을 씁니다.
+    public void changeGoal(String goal, int progress) {
+        this.goal = goal;
+        this.progress = progress;
+    }
+
+
+
 }

@@ -5,6 +5,7 @@ import com.fitnessmedical.dto.health.HealthRecordRequest;
 import com.fitnessmedical.dto.health.HealthRecordResponse;
 import com.fitnessmedical.dto.member.MemberCreateRequest;
 import com.fitnessmedical.dto.member.MemberResponse;
+import com.fitnessmedical.dto.member.MemberUpdateRequest;
 import com.fitnessmedical.service.FeedbackService;
 import com.fitnessmedical.service.HealthRecordService;
 import com.fitnessmedical.service.MemberService;
@@ -73,4 +74,20 @@ public class MemberController {
     public MemberResponse createMember(@Valid @RequestBody MemberCreateRequest request){
         return memberService.create(request);
     }
+
+    // PUT /api/members/{memberId} 요청을 처리합니다.
+    // 이미 있는 회원을 "고치는" 거라 POST가 아니라 PUT을 쓰고,
+    // 어떤 회원인지 알아야 하니 {memberId}가 URL에 들어갑니다.
+    @PutMapping("/{memberId}")
+    public MemberResponse updateMember(@PathVariable Long memberId,
+                                       @Valid @RequestBody MemberUpdateRequest request) {
+        return memberService.update(memberId, request);
+    }
+
+    @DeleteMapping("/{memberId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteMember(@PathVariable Long memberId){
+        memberService.delete(memberId);
+    }
+
 }
