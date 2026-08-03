@@ -1,6 +1,7 @@
 package com.fitnessmedical.controller;
 
 import com.fitnessmedical.dto.feedback.FeedbackResponse;
+import com.fitnessmedical.dto.feedback.FeedbackRequest;
 import com.fitnessmedical.dto.health.HealthRecordRequest;
 import com.fitnessmedical.dto.health.HealthRecordResponse;
 import com.fitnessmedical.dto.member.MemberCreateRequest;
@@ -65,6 +66,15 @@ public class MemberController {
     @GetMapping("/{memberId}/feedback")
     public List<FeedbackResponse> getFeedback(@PathVariable Long memberId) {
         return feedbackService.findByMemberId(memberId);
+    }
+
+    @PostMapping("/{memberId}/feedback")
+    @ResponseStatus(HttpStatus.CREATED)
+    public FeedbackResponse createFeedback(
+            @PathVariable Long memberId,
+            @Valid @RequestBody FeedbackRequest request
+    ) {
+        return feedbackService.create(memberId, request);
     }
 
     // POST /api/members 요청을 처리합니다. (클래스 레벨 경로 그대로 사용, 추가 경로 없음)
