@@ -2,8 +2,11 @@ package com.fitnessmedical.service;
 
 import com.fitnessmedical.dto.health.HealthRecordRequest;
 import com.fitnessmedical.dto.health.HealthRecordResponse;
+import com.fitnessmedical.dto.member.MemberCreateRequest;
+import com.fitnessmedical.dto.member.MemberResponse;
 import com.fitnessmedical.entity.HealthRecord;
 import com.fitnessmedical.entity.Member;
+import com.fitnessmedical.entity.MemberStatus;
 import com.fitnessmedical.repository.HealthRecordRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,4 +48,6 @@ public class HealthRecordService {
         // save()가 INSERT를 수행하고, 저장된 Entity를 다시 응답 DTO로 변환합니다.
         return HealthRecordResponse.from(healthRecordRepository.save(record));
     }
+
+
 }

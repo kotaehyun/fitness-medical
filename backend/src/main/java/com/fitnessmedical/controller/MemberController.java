@@ -68,12 +68,11 @@ public class MemberController {
         return feedbackService.findByMemberId(memberId);
     }
 
+    // POST /api/members/{memberId}/feedback 요청을 처리합니다. (createRecord()와 동일한 패턴)
     @PostMapping("/{memberId}/feedback")
     @ResponseStatus(HttpStatus.CREATED)
-    public FeedbackResponse createFeedback(
-            @PathVariable Long memberId,
-            @Valid @RequestBody FeedbackRequest request
-    ) {
+    public FeedbackResponse createFeedback(@PathVariable Long memberId,
+                                           @Valid @RequestBody FeedbackRequest request) {
         return feedbackService.create(memberId, request);
     }
 
