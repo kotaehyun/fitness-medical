@@ -26,7 +26,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleValidation(MethodArgumentNotValidException exception) {
         String message = exception.getBindingResult().getFieldErrors().stream()
                 .findFirst()
-                .map(error -> error.getField() + " 입력값을 확인해 주세요.")
+                .map(error -> error.getDefaultMessage())
                 .orElse("입력값을 확인해 주세요.");
 
         return ResponseEntity.badRequest()
