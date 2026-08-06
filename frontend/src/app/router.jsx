@@ -5,6 +5,7 @@ import { LoginPage } from '../pages/auth/LoginPage';
 import { PlaceholderPage } from '../pages/common/PlaceholderPage';
 import { LandingPage } from '../pages/landing/LandingPage';
 import { HealthRecordsPage } from '../pages/member/HealthRecordsPage';
+import { MemberFeedbackPage } from '../pages/member/MemberFeedbackPage';
 import { MemberDashboard, memberNav } from '../pages/member/MemberDashboard';
 import { MemberDetailPage } from '../pages/professional/MemberDetailPage';
 import { MemberManagementPage } from '../pages/professional/MemberManagementPage';
@@ -59,6 +60,14 @@ export function AppRouter() {
         element={
           <ProtectedRoute allowedRole="MEMBER">
             <HealthRecordsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/member/feedback"
+        element={
+          <ProtectedRoute allowedRole="MEMBER">
+            <MemberFeedbackPage />
           </ProtectedRoute>
         }
       />

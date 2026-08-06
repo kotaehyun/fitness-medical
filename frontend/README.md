@@ -60,6 +60,7 @@ SPRING_PROFILES_ACTIVE=mysql SERVER_PORT=8081 ./gradlew bootRun
 - `/login` 체험 로그인
 - `/member` 회원 대시보드
 - `/member/records` 건강 기록
+- `/member/feedback` 전문가 피드백
 - `/professional` 전문가 대시보드
 - `/professional/members/m1` 전문가용 회원 상세
 
