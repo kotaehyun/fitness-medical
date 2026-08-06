@@ -1,14 +1,30 @@
-import { ArrowRight, Users } from 'lucide-react';
+import { ArrowRight, Edit3, Trash2, Users } from 'lucide-react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ProgressBar } from '../../components/common/ProgressBar';
 import { StateView } from '../../components/common/StateView';
 import { StatusBadge } from '../../components/common/StatusBadge';
 import { AppShell } from '../../components/layout/AppShell';
 import { useMembers } from '../../hooks/useDashboardData';
+import { healthService } from '../../services/healthService';
 import { professionalNav } from './ProfessionalDashboard';
 
 export function MemberManagementPage() {
   const query = useMembers();
+  const queryClient = useQueryClient();
+  const [editingMember, setEditingMember] = useState(null);
+  const updateMutation = useMutation({
+    mutationFn: ({ id, goal, progress }) => healthService.updateMember(id, { goal, progress }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['members'] });
+      setEditingMember(null);
+    },
+  });
+  const deleteMutation = useMutation({
+    mutationFn: healthService.deleteMember,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['members'] }),
+  });
 
   if (query.isLoading) {
     return (
@@ -60,7 +76,7 @@ export function MemberManagementPage() {
             <span>최근 측정일</span>
             <span>종합 상태</span>
             <span>목표 달성률</span>
-            <span />
+            <span>관리</span>
           </div>
           {query.data.map((member) => (
             <div className="member-row" key={member.id}>
@@ -81,7 +97,27 @@ export function MemberManagementPage() {
                 <ProgressBar value={member.progress} />
                 <small>{member.progress}%</small>
               </span>
-              <span>
+              <span className="member-actions">
+                <button
+                  className="text-button"
+                  onClick={() => setEditingMember(member)}
+                  disabled={deleteMutation.isPending}
+                >
+                  <Edit3 size={14} />
+                  수정
+                </button>
+                <button
+                  className="text-button"
+                  onClick={() => {
+                    if (window.confirm(member.name + ' 회원을 삭제할까요?')) {
+                      deleteMutation.mutate(member.id);
+                    }
+                  }}
+                  disabled={deleteMutation.isPending}
+                >
+                  <Trash2 size={14} />
+                  삭제
+                </button>
                 <Link to={'/professional/members/' + member.id} className="text-button">
                   상세보기
                   <ArrowRight size={14} />
@@ -91,6 +127,67 @@ export function MemberManagementPage() {
           ))}
         </div>
       </section>
+      {editingMember && (
+        <MemberEditModal
+          member={editingMember}
+          pending={updateMutation.isPending}
+          error={updateMutation.error?.message}
+          onClose={() => setEditingMember(null)}
+          onSubmit={(member) => updateMutation.mutate(member)}
+        />
+      )}
     </AppShell>
+  );
+}
+
+function MemberEditModal({ member, pending, error, onClose, onSubmit }) {
+  const [goal, setGoal] = useState(member.goal);
+  const [progress, setProgress] = useState(member.progress);
+
+  return (
+    <div className="modal-backdrop" role="presentation">
+      <div className="modal" role="dialog" aria-modal="true" aria-labelledby="member-edit-title">
+        <div className="modal-head">
+          <div>
+            <h2 id="member-edit-title">회원 목표 수정</h2>
+            <p>{member.name} 회원의 목표와 진행률을 수정합니다.</p>
+          </div>
+          <button className="icon-button" onClick={onClose} aria-label="닫기" disabled={pending}>
+            ×
+          </button>
+        </div>
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            onSubmit({ id: member.id, goal, progress: Number(progress) });
+          }}
+        >
+          <label className="full-field">
+            목표
+            <input value={goal} onChange={(event) => setGoal(event.target.value)} required />
+          </label>
+          <label className="full-field">
+            진행률 (%)
+            <input
+              type="number"
+              min="0"
+              max="100"
+              value={progress}
+              onChange={(event) => setProgress(event.target.value)}
+              required
+            />
+          </label>
+          {error && <p className="form-error" role="alert">{error}</p>}
+          <div className="modal-actions">
+            <button type="button" className="button secondary" onClick={onClose} disabled={pending}>
+              취소
+            </button>
+            <button className="button primary" disabled={pending}>
+              {pending ? '저장 중...' : '저장'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 }

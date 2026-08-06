@@ -119,3 +119,11 @@ npm run dev
 - 데모 버튼은 화면 체험용이며 실제 계정 인증과 구분됩니다.
 - 실제 API 모드에서는 백엔드, MySQL, CORS 설정이 모두 실행되어야 합니다.
 - 프론트에서 API 요청 시 세션 유지를 위해 `credentials: 'include'`가 필요합니다.
+
+## 후속 프론트 구현
+
+- `/professional/members` 회원관리 화면에 목표·진행률 수정 모달 추가
+- `PUT /api/members/{memberId}` 호출 및 성공 후 회원 목록 갱신
+- `DELETE /api/members/{memberId}` 호출 전 삭제 확인 추가
+- `204 No Content` 응답을 공통 API 요청 함수에서 처리
+- API 모드와 Mock 모드 모두 회원 수정·삭제 메서드 지원

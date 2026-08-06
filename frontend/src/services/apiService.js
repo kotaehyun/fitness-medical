@@ -13,6 +13,7 @@ async function request(path, options = {}) {
     throw new Error(error?.message || '서버 요청에 실패했습니다.');
   }
 
+  if (response.status === 204) return null;
   return response.json();
 }
 
@@ -87,6 +88,20 @@ export const apiService = {
       body: JSON.stringify(feedback),
     });
     return mapFeedback(data);
+  },
+
+  async updateMember(id, member) {
+    return mapMember(await request('/members/' + toApiId(id), {
+      method: 'PUT',
+      body: JSON.stringify({
+        goal: member.goal,
+        progress: member.progress,
+      }),
+    }));
+  },
+
+  async deleteMember(id) {
+    await request('/members/' + toApiId(id), { method: 'DELETE' });
   },
 
   async addRecord(record) {
