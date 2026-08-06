@@ -46,6 +46,8 @@ export function MemberDashboard() {
     );
   const m = member.data,
     rs = records.data;
+  const latestRecord = [...rs].sort((a, b) => b.date.localeCompare(a.date))[0];
+  const latestDetail = latestRecord ? `${latestRecord.date} 측정` : '측정 기록 없음';
   return (
     <AppShell nav={memberNav}>
       <div className="page-head">
@@ -89,33 +91,33 @@ export function MemberDashboard() {
         <MetricCard
           icon={HeartPulse}
           label="혈압"
-          value="120/80"
+          value={latestRecord ? `${latestRecord.systolic}/${latestRecord.diastolic}` : '—'}
           unit="mmHg"
-          detail="최근 측정 · 오늘 오전 8:20"
+          detail={latestDetail}
           tone="mint"
         />
         <MetricCard
           icon={Droplets}
           label="혈당"
-          value="102"
+          value={latestRecord ? latestRecord.bloodSugar : '—'}
           unit="mg/dL"
-          detail="최근 측정 · 오늘 오전 8:25"
+          detail={latestDetail}
           tone="blue"
         />
         <MetricCard
           icon={Weight}
           label="체중"
-          value="68.0"
+          value={latestRecord ? latestRecord.weight : '—'}
           unit="kg"
-          detail="지난주 대비 -0.5kg"
+          detail={latestDetail}
           tone="navy"
         />
         <MetricCard
           icon={Footprints}
           label="걸음 수"
-          value="7,500"
+          value={latestRecord ? latestRecord.steps.toLocaleString() : '—'}
           unit="보"
-          detail="일일 목표의 75%"
+          detail={latestRecord ? '최근 측정 기록' : '측정 기록 없음'}
           tone="amber"
         />
       </div>

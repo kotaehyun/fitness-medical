@@ -1,9 +1,10 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8081/api';
 
 // [발표 핵심] fetch의 중복 코드와 공통 오류 처리를 request 함수 한 곳에 모았습니다.
 async function request(path, options = {}) {
   const response = await fetch(`${API_URL}${path}`, {
     headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
     ...options,
   });
 
@@ -50,6 +51,17 @@ function mapFeedback(feedback) {
 }
 
 export const apiService = {
+  async login(loginId, password) {
+    return request('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ loginId, password }),
+    });
+  },
+
+  async getCurrentAccount() {
+    return request('/auth/me');
+  },
+
   async getMembers() {
     const data = await request('/members');
     return data.map(mapMember);
@@ -67,6 +79,14 @@ export const apiService = {
   async getFeedback(memberId = 'm1') {
     const data = await request(`/members/${toApiId(memberId)}/feedback`);
     return data.map(mapFeedback);
+  },
+
+  async addFeedback(memberId, feedback) {
+    const data = await request(`/members/${toApiId(memberId)}/feedback`, {
+      method: 'POST',
+      body: JSON.stringify(feedback),
+    });
+    return mapFeedback(data);
   },
 
   async addRecord(record) {

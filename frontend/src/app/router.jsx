@@ -1,14 +1,43 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { StateView } from '../components/common/StateView';
 import { LoginPage } from '../pages/auth/LoginPage';
 import { PlaceholderPage } from '../pages/common/PlaceholderPage';
 import { LandingPage } from '../pages/landing/LandingPage';
 import { HealthRecordsPage } from '../pages/member/HealthRecordsPage';
 import { MemberDashboard, memberNav } from '../pages/member/MemberDashboard';
 import { MemberDetailPage } from '../pages/professional/MemberDetailPage';
+import { MemberManagementPage } from '../pages/professional/MemberManagementPage';
 import {
   ProfessionalDashboard,
   professionalNav,
 } from '../pages/professional/ProfessionalDashboard';
+import { apiService } from '../services/apiService';
+
+function ProtectedRoute({ allowedRole, children }) {
+  const demoRole = sessionStorage.getItem('fitness-demo-role');
+  const accountQuery = useQuery({
+    queryKey: ['auth', 'me'],
+    queryFn: apiService.getCurrentAccount,
+    enabled: !demoRole,
+    retry: false,
+  });
+
+  if (!demoRole && accountQuery.isLoading) {
+    return <StateView type="loading" message="로그인 정보를 확인하고 있습니다." />;
+  }
+
+  if (!demoRole && (accountQuery.isError || !accountQuery.data)) {
+    return <Navigate to="/login" replace />;
+  }
+
+  const role = demoRole || String(accountQuery.data.role || '').toUpperCase();
+  if (role !== allowedRole) {
+    return <Navigate to={role === 'PROFESSIONAL' ? '/professional' : '/member'} replace />;
+  }
+
+  return children;
+}
 
 // [발표 핵심] React Router는 현재 URL에 맞는 페이지 컴포넌트를 선택합니다.
 // 공통 메뉴에 아직 구현되지 않은 주소는 PlaceholderPage가 받아서 빈 화면을 방지합니다.
@@ -17,14 +46,61 @@ export function AppRouter() {
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/member" element={<MemberDashboard />} />
-      <Route path="/member/records" element={<HealthRecordsPage />} />
-      <Route path="/member/*" element={<PlaceholderPage nav={memberNav} />} />
-      <Route path="/professional" element={<ProfessionalDashboard />} />
-      <Route path="/professional/members/:id" element={<MemberDetailPage />} />
+      <Route
+        path="/member"
+        element={
+          <ProtectedRoute allowedRole="MEMBER">
+            <MemberDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/member/records"
+        element={
+          <ProtectedRoute allowedRole="MEMBER">
+            <HealthRecordsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/member/*"
+        element={
+          <ProtectedRoute allowedRole="MEMBER">
+            <PlaceholderPage nav={memberNav} />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/professional"
+        element={
+          <ProtectedRoute allowedRole="PROFESSIONAL">
+            <ProfessionalDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/professional/members/:id"
+        element={
+          <ProtectedRoute allowedRole="PROFESSIONAL">
+            <MemberDetailPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/professional/members"
+        element={
+          <ProtectedRoute allowedRole="PROFESSIONAL">
+            <MemberManagementPage />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/professional/*"
-        element={<PlaceholderPage nav={professionalNav} professional />}
+        element={
+          <ProtectedRoute allowedRole="PROFESSIONAL">
+            <PlaceholderPage nav={professionalNav} professional />
+          </ProtectedRoute>
+        }
       />
       {/* 등록되지 않은 주소는 랜딩 페이지로 이동시킵니다. replace는 잘못된 URL을 방문 기록에서 교체합니다. */}
       <Route path="*" element={<Navigate to="/" replace />} />

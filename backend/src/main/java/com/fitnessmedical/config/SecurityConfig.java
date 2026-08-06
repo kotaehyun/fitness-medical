@@ -9,6 +9,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.config.Customizer;
 
 
 /** Spring Security의 요청 접근 규칙을 설정합니다. */
@@ -39,6 +40,7 @@ public class SecurityConfig {
                 // 현재는 REST API 시연 단계이므로 CSRF 검사를 임시로 비활성화합니다.
                 // 실제 로그인 방식을 결정할 때 보안 설정을 다시 검토해야 합니다.
                 .csrf(csrf -> csrf.disable())
+                .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
                         // 학습 단계에서는 API와 H2 콘솔에 로그인 없이 접근할 수 있습니다.
                         .requestMatchers(
