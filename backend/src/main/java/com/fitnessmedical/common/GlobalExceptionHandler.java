@@ -21,6 +21,31 @@ public class GlobalExceptionHandler {
                 .body(new ApiErrorResponse(LocalDateTime.now(), 404, exception.getMessage()));
     }
 
+    // 로그인 아이디처럼 고유해야 하는 값이 중복되면 HTTP 409를 반환합니다.
+    @ExceptionHandler(DuplicateResourceException.class)
+    public ResponseEntity<ApiErrorResponse> handleDuplicate(
+            DuplicateResourceException exception
+    ) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ApiErrorResponse(
+                        LocalDateTime.now(),
+                        HttpStatus.CONFLICT.value(),
+                        exception.getMessage()
+                ));
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidCredentials(
+            InvalidCredentialsException exception
+    ) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new ApiErrorResponse(
+                        LocalDateTime.now(),
+                        HttpStatus.UNAUTHORIZED.value(),
+                        exception.getMessage()
+                ));
+    }
+
     // @Valid 검증에 실패하면 Spring이 MethodArgumentNotValidException을 발생시킵니다.
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiErrorResponse> handleValidation(MethodArgumentNotValidException exception) {
@@ -32,4 +57,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest()
                 .body(new ApiErrorResponse(LocalDateTime.now(), 400, message));
     }
+
+
 }
