@@ -10,10 +10,11 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        // React 개발 서버(localhost:5174)에서 /api/** 호출을 허용합니다.
+        // React 개발 서버에서 세션 기반 API 호출을 허용합니다.
         registry.addMapping("/api/**")
-                .allowedOrigins("http://localhost:5174")
+                .allowedOrigins("http://localhost:5173", "http://localhost:5174")
                 .allowedMethods("GET", "POST", "PUT", "DELETE")
-                .allowedHeaders("*");
+                .allowedHeaders("*")
+                .allowCredentials(true);
     }
 }

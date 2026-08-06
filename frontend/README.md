@@ -31,17 +31,28 @@ src/
 ## 데이터 흐름
 
 ```text
-Page → Query Hook → Mock Service → Mock Data
+Page → Query Hook → Health Service → API Service 또는 Mock Service
 ```
 
-페이지 컴포넌트는 데이터를 직접 만들지 않습니다. 현재 `mockService`를 사용하지만, 나중에 service 내부를 Spring Boot REST API 호출로 교체할 수 있습니다.
+페이지 컴포넌트는 데이터를 직접 만들지 않습니다. `VITE_USE_MOCK` 값에 따라 실제 Spring Boot API 또는 mock service를 선택합니다.
 
-기본 설정은 mock service입니다. Spring Boot 백엔드를 실행한 뒤 `.env` 파일에서 다음과 같이 변경하면 실제 API를 사용합니다.
+실제 API를 사용하려면 `frontend/.env.local`을 만들고 다음 값을 설정합니다.
 
 ```env
 VITE_USE_MOCK=false
-VITE_API_URL=http://localhost:8080/api
+VITE_API_URL=http://localhost:8081/api
 ```
+
+환경변수는 Vite 시작 시 읽으므로 `.env.local`을 변경한 뒤에는 프론트 개발 서버를 재시작해야 합니다.
+
+백엔드는 먼저 실행합니다.
+
+```bash
+cd backend
+SPRING_PROFILES_ACTIVE=mysql SERVER_PORT=8081 ./gradlew bootRun
+```
+
+프론트 개발 서버의 `localhost:5173`과 `localhost:5174` 요청은 백엔드 CORS 설정에서 허용됩니다. API 요청은 `credentials: 'include'`를 사용해 `JSESSIONID` 세션을 유지합니다.
 
 ## 주요 URL
 
@@ -49,6 +60,7 @@ VITE_API_URL=http://localhost:8080/api
 - `/login` 체험 로그인
 - `/member` 회원 대시보드
 - `/member/records` 건강 기록
+- `/member/feedback` 전문가 피드백
 - `/professional` 전문가 대시보드
 - `/professional/members/m1` 전문가용 회원 상세
 

@@ -100,3 +100,7 @@ DB_USERNAME=fitness_user \
 DB_PASSWORD=fitness_dev_2026 \
 ./gradlew bootRun
 ```
+
+## 프론트엔드 연동
+
+프론트 개발 서버 `http://localhost:5173`과 `http://localhost:5174`에서 `/api/**`를 호출할 수 있도록 CORS가 설정되어 있습니다. 세션 로그인은 `JSESSIONID` 쿠키를 사용하므로 프론트 요청에 credentials 포함이 필요합니다. CORS 또는 서버 포트를 변경한 뒤에는 백엔드를 재시작해야 합니다.

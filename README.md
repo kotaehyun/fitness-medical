@@ -15,7 +15,7 @@ Fitness_medical/
 └── README.md       # 전체 프로젝트 안내
 ```
 
-현재 프론트엔드와 Spring Boot 백엔드 기본 API가 구현되어 있습니다. 프론트엔드는 아직 mock service를 기본으로 사용하므로 백엔드 없이도 실행할 수 있습니다.
+현재 프론트엔드와 Spring Boot 백엔드 API가 연결되어 있습니다. `frontend/.env.local`에서 `VITE_USE_MOCK=false`를 사용하면 실제 API와 세션 로그인으로 실행하고, mock 모드가 필요하면 `VITE_USE_MOCK=true`로 전환할 수 있습니다.
 
 ## 프론트엔드 실행
 

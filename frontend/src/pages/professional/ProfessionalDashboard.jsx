@@ -40,6 +40,12 @@ export function ProfessionalDashboard() {
         <StateView type="error" message="회원 정보를 불러오지 못했습니다." />
       </AppShell>
     );
+  if (!query.data.length)
+    return (
+      <AppShell nav={professionalNav} professional>
+        <StateView type="empty" message="등록된 회원이 없습니다." />
+      </AppShell>
+    );
   return (
     <AppShell nav={professionalNav} professional>
       <div className="page-head">

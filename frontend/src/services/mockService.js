@@ -24,6 +24,31 @@ export const mockService = {
     await delay();
     return feedbacks.filter((f) => f.memberId === memberId);
   },
+  async addFeedback(memberId, feedback) {
+    await delay(450);
+    const created = {
+      ...feedback,
+      id: `f${Date.now()}`,
+      memberId,
+      date: new Date().toISOString().slice(0, 10),
+    };
+    feedbacks.unshift(created);
+    return created;
+  },
+  async updateMember(id, member) {
+    await delay();
+    const target = members.find((item) => item.id === id);
+    if (!target) throw new Error('회원을 찾을 수 없습니다.');
+    target.goal = member.goal;
+    target.progress = member.progress;
+    return target;
+  },
+  async deleteMember(id) {
+    await delay();
+    const index = members.findIndex((item) => item.id === id);
+    if (index === -1) throw new Error('회원을 찾을 수 없습니다.');
+    members.splice(index, 1);
+  },
   async addRecord(record) {
     await delay(450);
     // Date.now()는 데모 환경에서 새 레코드의 id가 겹치지 않게 만드는 간단한 방법입니다.

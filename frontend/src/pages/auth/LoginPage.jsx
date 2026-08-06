@@ -7,13 +7,51 @@ import {
   LockKeyhole,
   Mail,
 } from 'lucide-react';
+import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Logo } from '../../components/common/Logo';
 import { Disclaimer } from '../../components/common/Disclaimer';
+import { apiService } from '../../services/apiService';
+
 export function LoginPage() {
   const nav = useNavigate();
   const [params] = useSearchParams();
   const preferred = params.get('role');
+  const [loginId, setLoginId] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      const account = await apiService.login(loginId, password);
+      sessionStorage.removeItem('fitness-demo-role');
+      const currentAccount = account?.role ? account : await apiService.getCurrentAccount();
+      const role = String(currentAccount?.role || '').toUpperCase();
+
+      if (role === 'MEMBER') {
+        nav('/member');
+      } else if (role === 'PROFESSIONAL') {
+        nav('/professional');
+      } else {
+        setError('로그인한 계정의 역할을 확인할 수 없습니다.');
+      }
+    } catch (requestError) {
+      setError(requestError.message || '로그인에 실패했습니다. 아이디와 비밀번호를 확인해 주세요.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function enterDemo(role) {
+    sessionStorage.setItem('fitness-demo-role', role);
+    nav(role === 'PROFESSIONAL' ? '/professional' : '/member');
+  }
+
   return (
     <div className="login-page">
       <div className="login-side">
@@ -50,7 +88,7 @@ export function LoginPage() {
           <div className="demo-buttons">
             <button
               className={preferred === 'member' ? 'selected' : ''}
-              onClick={() => nav('/member')}
+              onClick={() => enterDemo('MEMBER')}
             >
               <span className="demo-icon">
                 <HeartPulse />
@@ -63,7 +101,7 @@ export function LoginPage() {
             </button>
             <button
               className={preferred === 'professional' ? 'selected' : ''}
-              onClick={() => nav('/professional')}
+              onClick={() => enterDemo('PROFESSIONAL')}
             >
               <span className="demo-icon navy">
                 <BriefcaseMedical />
@@ -78,24 +116,33 @@ export function LoginPage() {
           <div className="or">
             <span>또는 계정으로 로그인</span>
           </div>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              nav('/member');
-            }}
-          >
+          <form onSubmit={handleSubmit}>
             <label>
-              이메일
+              로그인 아이디
               <div className="input-wrap">
                 <Mail />
-                <input type="email" placeholder="name@example.com" required />
+                <input
+                  type="text"
+                  value={loginId}
+                  onChange={(event) => setLoginId(event.target.value)}
+                  placeholder="로그인 아이디를 입력하세요"
+                  autoComplete="username"
+                  required
+                />
               </div>
             </label>
             <label>
               비밀번호
               <div className="input-wrap">
                 <LockKeyhole />
-                <input type="password" placeholder="비밀번호를 입력하세요" required />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder="비밀번호를 입력하세요"
+                  autoComplete="current-password"
+                  required
+                />
                 <Eye />
               </div>
             </label>
@@ -105,8 +152,9 @@ export function LoginPage() {
               </label>
               <button type="button">비밀번호 찾기</button>
             </div>
-            <button className="button primary full" type="submit">
-              로그인
+            {error && <p className="form-error" role="alert">{error}</p>}
+            <button className="button primary full" type="submit" disabled={loading}>
+              {loading ? '로그인 중...' : '로그인'}
             </button>
           </form>
           <Disclaimer />
