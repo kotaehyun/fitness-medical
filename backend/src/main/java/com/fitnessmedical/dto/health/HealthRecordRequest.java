@@ -4,20 +4,29 @@ import jakarta.validation.constraints.*;
 import java.time.LocalDate;
 
 /**
- * 건강 기록 등록 요청 JSON을 받는 DTO입니다.
- * 각 어노테이션은 허용할 입력 범위를 검증합니다.
+ * [공부/면접] 건강 기록 등록 요청 DTO
+ *
+ * <p><b>Q. memberId가 DTO에 없는 이유는?</b><br>
+ * A. REST 경로 {@code /members/{memberId}/health-records}에서 받습니다.
+ * Entity(HealthRecord)는 {@link com.fitnessmedical.entity.Member} 객체 FK로 저장.</p>
+ *
+ * <p><b>Q. @Min/@Max vs @DecimalMin/@DecimalMax?</b><br>
+ * A. int 등 정수 → @Min/@Max. double 등 소수 → @DecimalMin/@DecimalMax(문자열로 경계값 표현).</p>
+ *
+ * <p><b>Q. @NotNull vs @NotBlank?</b><br>
+ * A. LocalDate는 @NotNull(날짜 미전달 방지). String 필드가 있다면 @NotBlank 사용.</p>
  */
 public record HealthRecordRequest(
-        // @NotNull은 값 자체가 전달되지 않은 경우를 막습니다.
         @NotNull LocalDate measuredDate,
-        // @Min과 @Max는 숫자의 최솟값과 최댓값을 제한합니다.
+
         @Min(80) @Max(180) int systolic,
         @Min(50) @Max(120) int diastolic,
         @Min(60) @Max(200) int bloodSugar,
-        // 소수 범위는 DecimalMin과 DecimalMax로 표현할 수 있습니다.
+
         @DecimalMin("30.0") @DecimalMax("200.0") double weight,
         @DecimalMin("5.0") @DecimalMax("60.0") double bodyFat,
         @DecimalMin("0.0") @DecimalMax("16.0") double sleepHours,
+
         @Min(0) @Max(50000) int steps
 ) {
 }

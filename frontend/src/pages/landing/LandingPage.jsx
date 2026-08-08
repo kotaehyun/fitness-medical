@@ -1,3 +1,15 @@
+/**
+ * [공부/면접] 랜딩 페이지 (LandingPage.jsx)
+ *
+ * Q. 이 페이지의 역할은?
+ * A. 비로그인 마케팅·소개 화면. CTA로 /login?role=member|professional 데모 진입.
+ *
+ * Q. hero의 대시보드 미리보기는 실제 API 데이터인가?
+ * A. 아니다. 정적 UI mockup — 시연용 가상 수치(의료 진단·처방 아님).
+ *
+ * Q. ImageStoryCarousel을 쓰는 이유는?
+ * A. 서비스 가치(전문가 협업, 생활 코칭)를 시각 스토리로 전달.
+ */
 import {
   Activity,
   ArrowRight,

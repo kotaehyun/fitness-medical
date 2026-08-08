@@ -10,22 +10,30 @@
 ## 현재 관계
 
 ```text
+Member 1 ─── 0..1 Account   (accounts.member_id, UNIQUE)
 Member 1 ─── N HealthRecord
 Member 1 ─── N Feedback
 ```
 
+- MEMBER 계정만 회원과 1:1로 연결할 수 있습니다. PROFESSIONAL은 `member_id`가 null입니다.
 - 회원 한 명은 여러 건강 기록을 작성할 수 있습니다.
 - 회원 한 명은 여러 전문가 피드백을 받을 수 있습니다.
-- `health_records.member_id`와 `feedbacks.member_id`는 `members.id`를 참조하는 외래키입니다.
+- `accounts.member_id`, `health_records.member_id`, `feedbacks.member_id`는 `members.id`를 참조하는 외래키입니다.
 
 ## JPA 코드와 연결
 
 ```java
+// Account → Member (1:1, optional)
+@OneToOne(fetch = FetchType.LAZY)
+@JoinColumn(name = "member_id", unique = true)
+private Member member;
+
+// HealthRecord / Feedback → Member (N:1)
 @ManyToOne(fetch = FetchType.LAZY)
 @JoinColumn(name = "member_id")
 private Member member;
 ```
 
-위 코드는 여러 건강 기록 또는 피드백이 하나의 회원을 참조한다는 의미입니다.
+계정에 연결된 회원은 삭제 전 `existsByMember_Id`로 막아 FK 위반(500)을 방지합니다.
 
 Entity를 수정하면 이 폴더의 ERD와 `schema.sql`도 함께 갱신해야 합니다.

@@ -1,3 +1,20 @@
+/**
+ * [공부/면접] 로그인·데모 진입 (LoginPage.jsx)
+ *
+ * Q. 실제 로그인 vs 데모 체험 흐름 차이는?
+ * A. 로그인: apiService.login → 세션 쿠키 + account-member-id 저장 → role별 redirect.
+ *    데모: sessionStorage 'fitness-demo-role'만 설정, API 인증 없이 ProtectedRoute 통과.
+ *
+ * Q. account-member-id sessionStorage 용도는?
+ * A. MEMBER 계정 로그인 시 연결된 memberId(m1 등)를 저장.
+ *    useDashboardData·apiService.addRecord가 "누구의 기록인지" 판별할 때 사용.
+ *
+ * Q. 로그인 성공 시 fitness-demo-role remove ?
+ * A. 이전 데모 세션과 실계정 세션이 충돌하지 않도록 demo 플래그를 지운다.
+ *
+ * Q. 보안 — password 처리 주의점?
+ * A. state에만 보관, 전송 후 로그/에러 메시지에 포함하지 않는다.
+ */
 import {
   ArrowLeft,
   ArrowRight,
@@ -29,8 +46,15 @@ export function LoginPage() {
 
     try {
       const account = await apiService.login(loginId, password);
+      // 실계정 로그인 — 데모 role 플래그 제거
       sessionStorage.removeItem('fitness-demo-role');
       const currentAccount = account?.role ? account : await apiService.getCurrentAccount();
+      if (currentAccount.memberId) {
+        // [면접] MEMBER 전용 — 이후 GET/POST records 경로에 사용
+        sessionStorage.setItem('account-member-id', currentAccount.memberId);
+      } else {
+        sessionStorage.removeItem('account-member-id');
+      }
       const role = String(currentAccount?.role || '').toUpperCase();
 
       if (role === 'MEMBER') {
@@ -41,6 +65,7 @@ export function LoginPage() {
         setError('로그인한 계정의 역할을 확인할 수 없습니다.');
       }
     } catch (requestError) {
+      // [면접] 에러 메시지에 password 포함 금지 — loginId만 사용자에게 안내
       setError(requestError.message || '로그인에 실패했습니다. 아이디와 비밀번호를 확인해 주세요.');
     } finally {
       setLoading(false);
@@ -48,6 +73,7 @@ export function LoginPage() {
   }
 
   function enterDemo(role) {
+    // [면접] 데모 MEMBER → useDashboardData가 m1 사용 / PROFESSIONAL → useMembers 등
     sessionStorage.setItem('fitness-demo-role', role);
     nav(role === 'PROFESSIONAL' ? '/professional' : '/member');
   }

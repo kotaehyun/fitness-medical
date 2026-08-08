@@ -1,3 +1,20 @@
+/**
+ * [공부/면접] 앱 라우팅 (router.jsx)
+ *
+ * Q. ProtectedRoute가 하는 일은?
+ * A. (1) 데모 role(sessionStorage) 또는 (2) /auth/me API로 역할 확인 후
+ *    allowedRole과 다르면 리다이렉트, 미인증이면 /login.
+ *
+ * Q. demoRole 있을 때 useQuery enabled: !demoRole ?
+ * A. 데모 체험은 쿠키 세션 없이 sessionStorage만으로 통과.
+ *    API 호출을 끄면 401·불필요한 로딩을 피한다.
+ *
+ * Q. Route path="/member/*" + PlaceholderPage ?
+ * A. 아직 구현되지 않은 회원 메뉴(목표, 예약 등)를 404 대신 "준비 중"으로 처리.
+ *
+ * Q. Navigate replace vs push ?
+ * A. replace는 history 스택에 남기지 않아 뒤로가기 시 보호 라우트로 재진입을 줄인다.
+ */
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { StateView } from '../components/common/StateView';
@@ -16,10 +33,12 @@ import {
 import { apiService } from '../services/apiService';
 
 function ProtectedRoute({ allowedRole, children }) {
+  // [면접] LoginPage enterDemo()가 설정 — 'MEMBER' | 'PROFESSIONAL'
   const demoRole = sessionStorage.getItem('fitness-demo-role');
   const accountQuery = useQuery({
     queryKey: ['auth', 'me'],
     queryFn: apiService.getCurrentAccount,
+    // 데모 모드면 /auth/me 호출 안 함 (세션 없음)
     enabled: !demoRole,
     retry: false,
   });
@@ -40,8 +59,6 @@ function ProtectedRoute({ allowedRole, children }) {
   return children;
 }
 
-// [발표 핵심] React Router는 현재 URL에 맞는 페이지 컴포넌트를 선택합니다.
-// 공통 메뉴에 아직 구현되지 않은 주소는 PlaceholderPage가 받아서 빈 화면을 방지합니다.
 export function AppRouter() {
   return (
     <Routes>
@@ -111,7 +128,6 @@ export function AppRouter() {
           </ProtectedRoute>
         }
       />
-      {/* 등록되지 않은 주소는 랜딩 페이지로 이동시킵니다. replace는 잘못된 URL을 방문 기록에서 교체합니다. */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

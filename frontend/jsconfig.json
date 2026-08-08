@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "checkJs": true,
+    "noImplicitAny": false,
     "jsx": "react-jsx",
     "module": "ESNext",
     "moduleResolution": "Bundler",

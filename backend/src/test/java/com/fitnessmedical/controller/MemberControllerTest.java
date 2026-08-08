@@ -1,28 +1,38 @@
 package com.fitnessmedical.controller;
 
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.fitnessmedical.dto.member.MemberCreateRequest;
+import com.fitnessmedical.dto.member.MemberResponse;
 import com.fitnessmedical.service.FeedbackService;
 import com.fitnessmedical.service.HealthRecordService;
 import com.fitnessmedical.service.MemberService;
-import com.fitnessmedical.dto.member.MemberCreateRequest;
-import com.fitnessmedical.dto.member.MemberResponse;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
 
-import org.springframework.beans.factory.annotation.Autowired;
-
-import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-
+/**
+ * [공부/면접] MemberController 슬라이스 테스트
+ *
+ * Q. @MockitoBean(types = {...}) 클래스 레벨 선언은?
+ * A. MemberController가 HealthRecordService, FeedbackService도 주입받으므로
+ *    사용하지 않는 테스트라도 컨텍스트 로딩을 위해 mock 빈이 필요하다.
+ *
+ * Q. 400 테스트에서 service stub이 없는 이유는?
+ * A. @Valid 실패 시 Controller 메서드 본문(Service 호출)까지 가지 않기 때문이다.
+ */
 @WebMvcTest(MemberController.class)
 @AutoConfigureMockMvc(addFilters = false)
+@MockitoBean(types = {HealthRecordService.class, FeedbackService.class})
 class MemberControllerTest {
 
     @Autowired
@@ -31,13 +41,13 @@ class MemberControllerTest {
     @MockitoBean
     MemberService memberService;
 
-    @MockitoBean
-    HealthRecordService healthRecordService;
-
-    @MockitoBean
-    FeedbackService feedbackService;
-
+    /**
+     * [케이스] 잘못된 입력 → 400
+     * - name 공백, age 0, progress 101 등 Bean Validation 위반
+     * - 면접: "클라이언트가 잘못된 JSON을 보내면 Service 전에 거른다"
+     */
     @Test
+    @SuppressWarnings("null")
     @DisplayName("잘못된 회원 등록 요청은 400을 반환한다.")
     void createMember_invalidRequest_return400() throws Exception {
         String json = """
@@ -58,7 +68,15 @@ class MemberControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
+    /**
+     * [케이스] 정상 입력 → 201 + JSON 본문
+     * - @ResponseStatus(CREATED) 또는 설정에 따라 201
+     * - given(service.create(...)).willReturn(...): Controller는 Service 결과를 그대로 응답
+     * - jsonPath("$.필드"): JSON Path로 응답 body를 검증
+     * - 면접: Controller 테스트는 "변환/상태코드"에 집중하고, 복잡한 규칙은 ServiceTest로
+     */
     @Test
+    @SuppressWarnings("null")
     @DisplayName("정상 회원 등록 요청은 201과 회원 정보를 반환한다.")
     void createMember_validRequest_returns201() throws Exception {
         MemberResponse response = new MemberResponse(
@@ -86,7 +104,7 @@ class MemberControllerTest {
                     "height" : 175.5,
                     "weight" : 72.3,
                     "goal" : "건강 습관 만들기",
-                    "progress": 10 
+                    "progress": 10
                 }
                 """;
 
@@ -100,4 +118,3 @@ class MemberControllerTest {
     }
 
 }
-

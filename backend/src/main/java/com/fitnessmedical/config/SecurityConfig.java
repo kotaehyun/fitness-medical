@@ -12,7 +12,28 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.config.Customizer;
 
 
-/** Spring Security의 요청 접근 규칙을 설정합니다. */
+/**
+ * [공부/면접] Spring Security — SecurityFilterChain
+ *
+ * Q. SecurityFilterChain이란?
+ * A. HTTP 요청이 Controller에 도달하기 전 거치는 필터들의 순서·규칙 묶음.
+ *    authorizeHttpRequests로 URL·HTTP 메서드별 인증/권한을 정의한다.
+ *
+ * Q. permitAll() vs authenticated() vs hasRole()?
+ * A. permitAll — 누구나 접근(회원가입·로그인 API, 학습용 /api/**).
+ *    authenticated — 로그인 세션/토큰 필요(/api/auth/me).
+ *    hasRole("PROFESSIONAL") — ROLE_PROFESSIONAL 권한 필요(피드백 작성 POST).
+ *
+ * Q. csrf.disable()을 쓰는 이유와 주의?
+ * A. REST + 세션/JSON API는 브라우저 form POST와 패턴이 달라 CSRF 토큰 검사를 끄는 경우가 많다.
+ *    운영에서는 SameSite 쿠키, CSRF 토큰, 또는 stateless JWT 등으로 다시 검토해야 한다.
+ *
+ * Q. PasswordEncoder(BCrypt)?
+ * A. 평문을 DB에 저장하지 않고 one-way 해시로 저장·비교한다.
+ *    matches(입력, 저장값)만으로 검증 — 역산으로 원문을 복구할 수 없다.
+ *
+ * Spring Security의 요청 접근 규칙을 설정합니다.
+ */
 @Configuration
 public class SecurityConfig {
 
@@ -31,30 +52,35 @@ public class SecurityConfig {
     public  AuthenticationManager authenticationManager(
             AuthenticationConfiguration configuration
     ) throws Exception {
+        // Spring Security가 UserDetailsService 등을 묶어 제공하는 인증 진입점
         return configuration.getAuthenticationManager();
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // 현재는 REST API 시연 단계이므로 CSRF 검사를 임시로 비활성화합니다.
+                // REST API 시연 단계: CSRF 토큰 없이 POST/PUT 가능하게 함 (학습·로컬 개발용)
                 // 실제 로그인 방식을 결정할 때 보안 설정을 다시 검토해야 합니다.
                 .csrf(csrf -> csrf.disable())
+                // WebConfig(CorsRegistry)에 등록한 CORS 정책을 Security 필터에도 적용
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
-                        // 학습 단계에서는 API와 H2 콘솔에 로그인 없이 접근할 수 있습니다.
+                        // 인증 없이 접근 허용 — 가입·로그인·H2 콘솔(로컬 DB 확인)
                         .requestMatchers(
                                 "/api/auth/signup",
                                 "/api/auth/login",
                                 "/h2-console/**"
                         ).permitAll()
+                        // 현재 로그인 사용자 조회 — 세션이 있어야 함
                         .requestMatchers("/api/auth/me").authenticated()
+                        // 전문가만 회원 피드백 작성 — HttpMethod까지 지정해 GET 등은 다른 규칙 적용 가능
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/api/members/*/feedback"
                         ).hasRole("PROFESSIONAL")
+                        // 학습 단계: 나머지 /api/** 는 로그인 없이 허용 (데모·프론트 연동 편의)
                         .requestMatchers("/api/**").permitAll()
-                        // 위 경로를 제외한 요청은 인증이 필요합니다.
+                        // 위에 매칭되지 않은 경로는 인증 필요
                         .anyRequest().authenticated()
                 )
                 // H2 콘솔은 iframe을 사용하므로 같은 출처의 frame 접근을 허용합니다.

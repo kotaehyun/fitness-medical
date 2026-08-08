@@ -1,3 +1,15 @@
+/**
+ * [공부/면접] 앱 공통 레이아웃 (AppShell.jsx)
+ *
+ * Q. AppShell의 책임은?
+ * A. 사이드바 NavLink, topbar, main children 슬롯 — 회원/전문가 워크스페이스 공통 chrome.
+ *
+ * Q. NavLink end={path.split('/').length === 3} ?
+ * A. /member, /professional 루트만 exact active. /member/records는 '건강 기록'만 active.
+ *
+ * Q. professional prop?
+ * A. 라벨·프로필 더미(홍길동 vs 김순자) 분기 — 시연용 UI.
+ */
 import { Bell, CalendarDays, ChevronDown, Menu, X } from 'lucide-react';
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';

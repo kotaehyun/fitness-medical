@@ -1,3 +1,15 @@
+/**
+ * [공부/면접] 전문가 회원 상세·피드백 작성 (MemberDetailPage.jsx)
+ *
+ * Q. useParams id 기본값 'm1'?
+ * A. URL 파라미터 없을 때 mock 데모 fallback(드물게 사용).
+ *
+ * Q. feedbackMutation invalidateQueries queryKey?
+ * A. ['feedback', id] — 해당 회원 피드백 목록만 refetch.
+ *
+ * Q. textarea placeholder·안내 문구?
+ * A. 코칭 톤 유도, 진단·처방 오해 방지(Disclaimer와 동일 정책).
+ */
 import {
   Activity,
   ArrowLeft,

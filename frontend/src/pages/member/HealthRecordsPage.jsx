@@ -1,3 +1,15 @@
+/**
+ * [공부/면접] 회원 건강 기록 목록·등록 (HealthRecordsPage.jsx)
+ *
+ * Q. useQuery vs useMutation 역할 분담은?
+ * A. useRecords: 조회·캐시. useMutation(addRecord): POST 후 invalidateQueries로 목록 갱신.
+ *
+ * Q. StatusBadge "정상"은 진단 결과인가?
+ * A. 시연 UI용 라벨 — 의료 진단·처방이 아닌 기록 참고 표시.
+ *
+ * Q. FormData + Number() 변환 이유는?
+ * A. HTML input value는 문자열. API/mock는 숫형 필드를 기대한다.
+ */
 import { CalendarDays, ChevronDown, Plus, X } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
@@ -13,8 +25,7 @@ export function HealthRecordsPage() {
   const [type, setType] = useState('전체 지표');
   const qc = useQueryClient();
 
-  // [발표 핵심] 조회는 useQuery, 등록은 useMutation으로 역할을 나눴습니다.
-  // 저장 성공 후 records 캐시를 무효화하면 TanStack Query가 최신 목록을 다시 조회합니다.
+  // [면접] mutation 성공 → ['records'] prefix invalidate → useRecords refetch
   const mutation = useMutation({
     mutationFn: healthService.addRecord,
     onSuccess: () => {
