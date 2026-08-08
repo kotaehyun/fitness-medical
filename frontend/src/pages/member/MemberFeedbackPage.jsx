@@ -1,3 +1,15 @@
+/**
+ * [공부/면접] 회원 전문가 피드백 목록 (MemberFeedbackPage.jsx)
+ *
+ * Q. useFeedback() 데이터 소스는?
+ * A. healthService(mock 또는 api) — memberId는 useDashboardData가 resolve.
+ *
+ * Q. loading / error / empty 분기 패턴?
+ * A. Early return + StateView — AppShell·nav는 각 상태에서도 유지.
+ *
+ * Q. 피드백 content 성격은?
+ * A. 생활·운동 코칭 의견(진단·처방 아님).
+ */
 import { MessageSquareText } from 'lucide-react';
 import { AppShell } from '../../components/layout/AppShell';
 import { StateView } from '../../components/common/StateView';

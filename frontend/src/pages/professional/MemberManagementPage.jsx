@@ -1,3 +1,15 @@
+/**
+ * [공부/면접] 전문가 회원 관리 CRUD (MemberManagementPage.jsx)
+ *
+ * Q. updateMutation vs deleteMutation invalidateQueries?
+ * A. 성공 시 ['members'] 캐시 무효화 → useMembers refetch로 테이블 갱신.
+ *
+ * Q. delete 시 window.confirm?
+ * A. 클라이언트 UX 확인. 실제 삭제는 healthService.deleteMember → API 204.
+ *
+ * Q. 수정 가능 필드가 goal/progress만인 이유는?
+ * A. 백엔드 PUT DTO와 동일 — PII·의료정보는 이 화면에서 다루지 않음.
+ */
 import { ArrowRight, Edit3, Trash2, Users } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';

@@ -10,7 +10,18 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.time.LocalDate;
 
-/** 전문가 피드백 조회 로직을 담당하는 Service입니다. */
+/**
+ * [공부/면접] 회원별 전문가 피드백 조회·등록을 담당하는 Service 계층입니다.
+ *
+ * Q. HealthRecordService와 구조가 비슷한 이유는?
+ * A. "memberId로 부모(Member) 존재 확인 → 자식 Entity CRUD" 패턴을 재사용합니다.
+ *    Service 간 협력(memberService.getMember)으로 404 규칙을 한곳에 모읍니다.
+ *
+ * Q. writtenDate를 서버에서 LocalDate.now()로 넣는 이유는?
+ * A. 클라이언트가 임의 날짜를 보내는 것을 막고, 등록 시점을 서버가 신뢰할 수 있게 합니다.
+ *
+ * 예외: ResourceNotFoundException(404) — getMember()에서 발생
+ */
 @Service
 @Transactional(readOnly = true)
 public class FeedbackService {
@@ -23,28 +34,35 @@ public class FeedbackService {
         this.memberService = memberService;
     }
 
+    /**
+     * [공부/면접] 특정 회원에 대한 피드백 목록을 최신 작성일 순으로 조회합니다.
+     *
+     * 흐름: getMember()로 회원 존재 확인 → feedbackRepository 조회 → DTO 변환
+     */
     public List<FeedbackResponse> findByMemberId(Long memberId) {
-        // 잘못된 회원 ID로 빈 배열만 반환하지 않도록 회원 존재 여부를 확인합니다.
         memberService.getMember(memberId);
         return feedbackRepository.findByMemberIdOrderByWrittenDateDesc(memberId).stream()
                 .map(FeedbackResponse::from)
                 .toList();
     }
 
-    // 클래스 전체엔 readOnly=true가 적용되어 있으니, 저장하는 이 메서드는 개별 @Transactional이 필요합니다.
+    /**
+     * [공부/면접] 새 피드백을 등록합니다.
+     *
+     * 흐름: getMember() → FeedbackRequest + LocalDate.now()로 Entity 생성
+     *       → save(INSERT) → FeedbackResponse 반환
+     *
+     * 면접 포인트: @Transactional(쓰기) — 조회·INSERT가 하나의 트랜잭션으로 처리됩니다.
+     */
     @Transactional
     public FeedbackResponse create(Long memberId, FeedbackRequest request ) {
 
-        // 1.회원이 존재하는지 확인하면 Member Entity를 가져옵니다. (HealthRecordService.create()와 동일 패턴)
         Member member = memberService.getMember(memberId);
 
-        // 2. DTO 값이 3개 + member + 서버가 만드는 writtenDate()
-        //    Feedback 생성자 순서: member, author, role, writtenDate, content
         Feedback feedback = new Feedback(
                 member, request.author(), request.role(), LocalDate.now(), request.content()
         );
 
-        // 3. save()로 저장하고, 응답 DTO로 변환해서 반환합니다.
         return FeedbackResponse.from(feedbackRepository.save(feedback));
     }
 }

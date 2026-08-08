@@ -1,3 +1,18 @@
+/**
+ * [공부/면접] Mock 시드 데이터 (data/mock/members.js)
+ *
+ * Q. 왜 in-memory 배열을 export하나?
+ * A. mockService가 import 후 filter/unshift/splice — 새로고침 시 Vite HMR/리로드로 초기화.
+ *
+ * Q. healthRecords memberId 'm1' only?
+ * A. MEMBER 데모(김순자) 30일 시계열. 다른 회원 상세는 members 메타만 있고 기록은 m1 중심.
+ *
+ * Q. wave 배열 역할?
+ * A. 30일간 혈압·걸음 등에 작은 변동을 줘 차트가 자연스럽게 보이도록.
+ *
+ * Q. conditions 필드?
+ * A. 코칭 참고용 lifestyle 메모 — 진단명이 아님.
+ */
 export const members = [
   {
     id: 'm1',

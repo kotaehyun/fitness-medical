@@ -14,6 +14,19 @@ CREATE TABLE members (
     last_measured_date DATE
 );
 
+CREATE TABLE accounts (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    login_id VARCHAR(50) NOT NULL,
+    password VARCHAR(100) NOT NULL,
+    display_name VARCHAR(30) NOT NULL,
+    role VARCHAR(20) NOT NULL,
+    member_id BIGINT NULL,
+    CONSTRAINT uk_accounts_login_id UNIQUE (login_id),
+    CONSTRAINT uk_accounts_member_id UNIQUE (member_id),
+    CONSTRAINT fk_accounts_member
+        FOREIGN KEY (member_id) REFERENCES members(id)
+);
+
 CREATE TABLE health_records (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     member_id BIGINT NOT NULL,

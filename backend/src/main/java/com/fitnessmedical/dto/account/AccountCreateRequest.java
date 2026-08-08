@@ -1,14 +1,33 @@
 package com.fitnessmedical.dto.account;
 
 import com.fitnessmedical.entity.AccountRole;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
-
+/**
+ * [공부/면접] 계정 생성 요청 DTO (Java record)
+ *
+ * <p><b>Q. record를 DTO로 쓰면 좋은 점은?</b><br>
+ * A. 불변(immutable) 데이터 캐리어, equals/hashCode/toString/접근자 자동 생성.
+ * JSON 역직렬화(@RequestBody)와 Bean Validation 조합에 적합합니다.</p>
+ *
+ * <p><b>Q. Entity(Account)와 무엇이 다른가?</b><br>
+ * A. DTO는 API 입력·검증 전용. password는 평문으로 받아 Service에서 BCrypt 인코딩 후 Entity에 저장.
+ * JPA 연관관계(Member 객체) 대신 {@code memberId}(Long)만 전달합니다.</p>
+ *
+ * <p><b>Q. memberId와 role 규칙은?</b><br>
+ * A. {@link AccountRole#MEMBER} → {@code memberId} 필수, {@link AccountRole#PROFESSIONAL} → null이어야 함.
+ * {@code @Positive}는 양수일 때만 통과(null은 별도 Service 검증).</p>
+ *
+ * <p><b>Q. @NotBlank vs @NotNull?</b><br>
+ * A. @NotBlank는 String 전용 — null, "", 공백만 있는 문자열 거부.
+ * @NotNull은 null만 거부(빈 문자열은 통과).</p>
+ */
 public record AccountCreateRequest(
-
 
         @NotBlank(message = "로그인 아이디는 필수입니다.")
         @Size(min = 4, max = 50, message = "로그인 아이디는 4자 이상 50자 이하여야 합니다.")
@@ -18,6 +37,7 @@ public record AccountCreateRequest(
         )
         String loginId,
 
+        // 평문으로 전달 — Entity 저장 전 BCrypt 인코딩. 로깅·응답에 절대 포함하지 않음
         @NotBlank(message = "비밀번호는 필수입니다.")
         @Size(min = 8, max = 64, message = "비밀번호는 8자 이상 64자 이하여야 합니다.")
         String password,
@@ -27,7 +47,10 @@ public record AccountCreateRequest(
         String displayName,
 
         @NotNull(message = "계정 역할은 필수입니다.")
-        AccountRole role
-) {
+        AccountRole role,
 
+        // MEMBER일 때만 필수 — @Positive는 1 이상일 때만 통과, null·0·음수는 Service에서 role별 검증
+        @Positive(message = "회원 ID는 양수여야 합니다.")
+        Long memberId
+) {
 }

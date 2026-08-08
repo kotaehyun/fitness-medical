@@ -3,20 +3,19 @@ package com.fitnessmedical.dto.member;
 import jakarta.validation.constraints.*;
 
 /**
- * 회원 수정 요청 JSON을 받는 DTO입니다.
+ * [공부/면접] 회원 수정 요청 DTO
  *
- * 요구 사항 (STUDY_TASKS 2단계):
- * - 회원의 "목표(goal)"와 "진행률(progress)"만 수정 대상입니다.
- * - goal   : 자유 텍스트, 비어 있으면 안 됨
- * - progress : 0 ~ 100
+ * <p><b>Q. CreateRequest와 UpdateRequest를 나누는 이유는?</b><br>
+ * A. 수정 API는 goal·progress만 변경. 이름·나이 등은 별도 API/정책.
+ * DTO를 분리하면 @Valid 검증 범위와 API 계약이 명확해집니다.</p>
+ *
+ * <p><b>Q. Entity의 changeGoal()과 어떻게 연결되나?</b><br>
+ * A. Controller @Valid → Service → {@link com.fitnessmedical.entity.Member#changeGoal(String, int)}.</p>
  */
-
 public record MemberUpdateRequest(
 
         @NotBlank String goal,
 
         @Min(0) @Max(100) int progress
-
 ) {
-    
 }

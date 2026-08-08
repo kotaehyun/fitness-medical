@@ -4,9 +4,15 @@ import com.fitnessmedical.entity.Member;
 import java.time.LocalDate;
 
 /**
- * 회원 조회 결과를 프론트엔드에 전달하는 응답 DTO입니다.
- * Entity를 그대로 응답하면 DB 구조와 API가 강하게 연결되므로 DTO로 분리합니다.
- * record는 값 전달용 클래스를 짧게 작성할 수 있는 Java 문법입니다.
+ * [공부/면접] 회원 조회 응답 DTO
+ *
+ * <p><b>Q. Entity를 그대로 응답하면 안 되나?</b><br>
+ * A. DB 컬럼·연관관계·영속성 컨텍스트와 API가 강결합됩니다.
+ * DTO는 프론트에 필요한 필드만, status는 enum 이름 대신 한글 label로 변환합니다.</p>
+ *
+ * <p><b>Q. Java record란?</b><br>
+ * A. Java 16+ 불변 데이터 클래스. 컴포넌트마다 접근자·equals/hashCode 자동 생성.
+ * Response DTO처럼 값 전달용에 적합합니다.</p>
  */
 public record MemberResponse(
         Long id,
@@ -17,10 +23,10 @@ public record MemberResponse(
         double weight,
         String goal,
         int progress,
-        String status,
+        String status,              // MemberStatus.getLabel() — "양호" 등 한글
         LocalDate lastMeasuredDate
 ) {
-    // Entity를 MemberResponse DTO로 바꾸는 정적 팩토리 메서드입니다.
+    // Entity → DTO 변환. LAZY 연관 객체 추가 로딩 없이 Member 필드만 사용
     public static MemberResponse from(Member member) {
         return new MemberResponse(
                 member.getId(), member.getName(), member.getGender(), member.getAge(),

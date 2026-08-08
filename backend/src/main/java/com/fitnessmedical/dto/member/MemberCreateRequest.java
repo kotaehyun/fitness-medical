@@ -1,49 +1,35 @@
 package com.fitnessmedical.dto.member;
 
-
-
 import jakarta.validation.constraints.*;
 
-
 /**
- * 회원 등록 요청 DTO.
+ * [공부/면접] 회원 등록 요청 DTO
  *
- * 설계 결정:
- * - name, gender, age, height, weight, goal, progress
- *   → 회원가입 시 사용자가 직접 입력하는 값이라 DTO에 포함.
- * - status, lastMeasuredDate
- *   → 가입 시점엔 아직 측정 이력이 없어서 서버가 기본값을 정하는 게 자연스러움.
- *     DTO에는 넣지 않고, MemberService.create()에서 Member를 만들 때
- *     기본값(예: status = CHECK_REQUIRED, lastMeasuredDate = null)을 채워줍니다.
- * - quantity, joinDate
- *   → 요구사항에도 없고 엔티티에도 없는 필드라 삭제.
+ * <p><b>Q. Entity(Member)와 필드 구성이 다른 이유는?</b><br>
+ * A. {@code status}, {@code lastMeasuredDate}는 가입 시 측정 이력이 없어
+ * MemberService.create()에서 기본값(CHECK_REQUIRED, null)으로 Entity에 설정합니다.</p>
+ *
+ * <p><b>Q. @NotBlank를 int/double에 쓸 수 없나?</b><br>
+ * A. @NotBlank는 CharSequence(String) 전용. 숫자는 @Min/@Max, @DecimalMin/@DecimalMax로 범위 검증.</p>
+ *
+ * <p><b>Q. record DTO의 장점은?</b><br>
+ * A. 불변 + 간결한 선언. @Valid와 함께 Controller에서 선언적 검증 가능.</p>
  */
-
 public record MemberCreateRequest(
-        // 이름: 필수. @NotBlank 하나로 null / "" / 공백만 있는 문자열까지 다 막아줍니다.
-        // (String 전용 어노테이션이라 int, double, LocalDate엔 못 씁니다.)
+        // @NotBlank: null, "", 공백만 있는 문자열 모두 거부
         @NotNull @NotBlank String name,
 
-        // 성별: name과 같은 이유로 @NotBlank
         @NotNull @NotBlank String gender,
 
-        // 나이: 1~120, int는 애초에 null이 될 수 없어서 @NotBlank / @ NotNull이 아니라
-        // 값의 "범위"를 검사하는 @Min/@Max를 씁니다.
+        // int는 원시 타입이라 null 불가 → @Min/@Max로 범위만 검사
         @Min(1) @Max(120) int age,
 
+        @DecimalMin("30.0") @DecimalMax("200.0") double weight,
 
-        // 체중(kg) : double 타입의 범위 제한은 @DecimalMin / DecimalMax를 씁니다.
-        @DecimalMin("30.0") @DecimalMax("200.0") double weight, // 값은 30~200, 근데 변수명은 weight
+        @DecimalMin("140") @DecimalMax("200") double height,
 
-        // 키(cm) : 위와 같은 이유로 @DecimalMin / @DecimalMax
-        @DecimalMin("140") @DecimalMax("200") double height,  // 값은 140~200, 근데 변수명은 height
-
-        // 목표: 자유 텍스트라 값이 비어있지 않은지만 체크
         @NotNull @NotBlank String goal,
 
-        // 목표 진행률: 0~100, int라서 @Min/@Max
         @Min(0) @Max(100) int progress
-
 ) {
-
 }

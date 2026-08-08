@@ -1,3 +1,15 @@
+/**
+ * [공부/면접] 전문가 대시보드 (ProfessionalDashboard.jsx)
+ *
+ * Q. professionalNav export 이유는?
+ * A. router·PlaceholderPage·하위 professional 페이지에서 공통 사이드바.
+ *
+ * Q. useMembers() vs useMemberData(id)?
+ * A. 전문가는 전체 회원 목록 조회. 회원 상세는 URL :id로 개별 훅 호출.
+ *
+ * Q. pro-summary 숫자(5, 2, 3…)는 API인가?
+ * A. 일부는 query.data, 일부는 시연용 정적 카드 — 데모 UI 혼합.
+ */
 import {
   AlertCircle,
   BellRing,

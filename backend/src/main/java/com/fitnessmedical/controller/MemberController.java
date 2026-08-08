@@ -16,11 +16,21 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * 회원 관련 HTTP 요청을 받는 Controller입니다.
- * Controller는 요청값 확인과 Service 호출, 응답 반환에 집중합니다.
+ * [공부/면접] 회원 및 하위 리소스(건강 기록, 피드백) HTTP API Controller입니다.
+ *
+ * Q. Controller → Service → Repository 계층에서 Controller 역할은?
+ * A. URL 매핑(@GetMapping, @PathVariable), 요청 본문 역직렬화(@RequestBody),
+ *    Bean Validation(@Valid), HTTP 상태 코드(@ResponseStatus)만 담당합니다.
+ *    비즈니스 규칙·DB 접근은 Service/Repository에 위임합니다.
+ *
+ * Q. @PathVariable Long memberId는?
+ * A. /api/members/{memberId} 경로의 {memberId}를 Long으로 변환해 Service에 전달합니다.
+ *
+ * Q. Service에서 발생하는 예외와 HTTP 코드는?
+ * A. ResourceNotFoundException → 404, InvalidRequestException → 400,
+ *    DuplicateResourceException → 409 (GlobalExceptionHandler가 처리)
  */
 @RestController
-// 이 Controller의 모든 API 앞에는 /api/members가 붙습니다.
 @RequestMapping("/api/members")
 public class MemberController {
 
@@ -35,40 +45,50 @@ public class MemberController {
         this.feedbackService = feedbackService;
     }
 
-    // GET /api/members 요청을 처리합니다.
+    /** [공부/면접] GET /api/members — 회원 전체 목록 */
     @GetMapping
     public List<MemberResponse> getMembers() {
         return memberService.findAll();
     }
 
-    // {memberId}는 URL 경로의 값을 의미합니다.
-    // @PathVariable이 해당 값을 Long 타입 매개변수로 변환합니다.
+    /**
+     * [공부/면접] GET /api/members/{memberId} — 회원 단건 조회
+     * @PathVariable: URL 경로 변수를 메서드 파라미터에 바인딩
+     */
     @GetMapping("/{memberId}")
     public MemberResponse getMember(@PathVariable Long memberId) {
         return memberService.findById(memberId);
     }
 
+    /** [공부/면접] GET /api/members/{memberId}/records — 건강 기록 목록 */
     @GetMapping("/{memberId}/records")
     public List<HealthRecordResponse> getRecords(@PathVariable Long memberId) {
         return healthRecordService.findByMemberId(memberId);
     }
 
-    // POST 요청의 JSON 본문은 @RequestBody를 통해 HealthRecordRequest로 변환됩니다.
+    /**
+     * [공부/면접] POST /api/members/{memberId}/records — 건강 기록 등록
+     *
+     * @Valid @RequestBody: JSON 본문을 DTO로 변환 후 @Min/@Max 등 검증(실패 시 400)
+     * @ResponseStatus(CREATED): 성공 시 201 반환
+     */
     @PostMapping("/{memberId}/records")
-    // 등록 성공 상태 코드인 201 Created를 반환합니다.
     @ResponseStatus(HttpStatus.CREATED)
     public HealthRecordResponse createRecord(@PathVariable Long memberId,
-                                             // @Valid가 DTO의 @Min, @Max 같은 검증 조건을 실행합니다.
                                              @Valid @RequestBody HealthRecordRequest request) {
         return healthRecordService.create(memberId, request);
     }
 
+    /** [공부/면접] GET /api/members/{memberId}/feedback — 피드백 목록 */
     @GetMapping("/{memberId}/feedback")
     public List<FeedbackResponse> getFeedback(@PathVariable Long memberId) {
         return feedbackService.findByMemberId(memberId);
     }
 
-    // POST /api/members/{memberId}/feedback 요청을 처리합니다. (createRecord()와 동일한 패턴)
+    /**
+     * [공부/면접] POST /api/members/{memberId}/feedback — 피드백 등록
+     * createRecord()와 동일한 Controller 패턴: PathVariable + Valid RequestBody → Service
+     */
     @PostMapping("/{memberId}/feedback")
     @ResponseStatus(HttpStatus.CREATED)
     public FeedbackResponse createFeedback(@PathVariable Long memberId,
@@ -76,23 +96,30 @@ public class MemberController {
         return feedbackService.create(memberId, request);
     }
 
-    // POST /api/members 요청을 처리합니다. (클래스 레벨 경로 그대로 사용, 추가 경로 없음)
+    /**
+     * [공부/면접] POST /api/members — 회원 등록
+     * @Valid: MemberCreateRequest 필드 검증 후 memberService.create() 위임
+     */
     @PostMapping
-    // 등록 성공 상태 코드 201을 반환합니다. (createRecord()랑 동일한 패턴)
     @ResponseStatus(HttpStatus.CREATED)
     public MemberResponse createMember(@Valid @RequestBody MemberCreateRequest request){
         return memberService.create(request);
     }
 
-    // PUT /api/members/{memberId} 요청을 처리합니다.
-    // 이미 있는 회원을 "고치는" 거라 POST가 아니라 PUT을 쓰고,
-    // 어떤 회원인지 알아야 하니 {memberId}가 URL에 들어갑니다.
+    /**
+     * [공부/면접] PUT /api/members/{memberId} — 회원 정보 수정
+     * PUT은 기존 리소스 전체/부분 갱신에 사용, memberId로 대상 식별
+     */
     @PutMapping("/{memberId}")
     public MemberResponse updateMember(@PathVariable Long memberId,
                                        @Valid @RequestBody MemberUpdateRequest request) {
         return memberService.update(memberId, request);
     }
 
+    /**
+     * [공부/면접] DELETE /api/members/{memberId} — 회원 삭제
+     * void 반환 + @ResponseStatus(NO_CONTENT) → 성공 시 204, 본문 없음
+     */
     @DeleteMapping("/{memberId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteMember(@PathVariable Long memberId){

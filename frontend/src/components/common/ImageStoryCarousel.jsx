@@ -1,3 +1,15 @@
+/**
+ * [공부/면접] 랜딩 이미지 캐러셀 (ImageStoryCarousel.jsx)
+ *
+ * Q. prefers-reduced-motion 체크 이유는?
+ * A. 접근성 — 사용자 OS 설정에서 애니메이션 감소 시 자동 슬라이드 비활성.
+ *
+ * Q. onFocusCapture로 pause ?
+ * A. 키보드 포커스 시에도 자동 전환 멈춤 — 콘텐츠 읽기 방해 방지.
+ *
+ * Q. aria-roledescription="carousel" ?
+ * A. 스크린리더에 슬라이드 UI임을 알림.
+ */
 import { Activity, HeartPulse, Pause, Play, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 

@@ -1,3 +1,15 @@
+/**
+ * [공부/면접] 회원 대시보드 (MemberDashboard.jsx)
+ *
+ * Q. memberNav export 이유는?
+ * A. router PlaceholderPage, HealthRecordsPage 등에서 동일 사이드바 메뉴 재사용.
+ *
+ * Q. useMemberData()에 id를 안 넘기면?
+ * A. resolveMemberId가 account-member-id 또는 demo MEMBER의 m1을 선택.
+ *
+ * Q. status/요약 문구는 의료 판정인가?
+ * A. 아니다. lifestyle·코칭 맥락의 종합 흐름 표시(시연 데이터).
+ */
 import {
   Activity,
   CalendarDays,
