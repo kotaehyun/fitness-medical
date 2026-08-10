@@ -51,7 +51,7 @@ gradle bootRun
 
 - Java 21
 - Spring Boot, Spring Data JPA, Spring Security
-- MySQL 8.4 (Docker, 포트 3307)
+- MySQL 8.4 (Docker; 호스트 포트는 환경마다 다름 — RTX 4090 노트북 기본 `3308`)
 
 ### AI Service
 

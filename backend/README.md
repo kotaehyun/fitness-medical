@@ -85,17 +85,19 @@ IntelliJ에서 MySQL 프로필을 사용할 때는 Run Configuration의 Environm
 
 ## MySQL 실행
 
-기존 MariaDB는 3306 포트로 유지하고, Fitness Medical의 MySQL 8.4는 Docker에서 3307 포트로 실행합니다. 실행 방법은 [`../docker/README.md`](../docker/README.md)를 참고하세요.
+기존 MariaDB는 3306 포트로 유지합니다. Fitness Medical Docker MySQL 호스트 포트는 환경마다 다를 수 있습니다.
+**RTX 4090 노트북** 기본값은 `3308`입니다(이 머신에서 `3307`은 로컬 mysqld가 사용). Mac 등에서는 `3307` 등 다른 포트를 쓸 수 있습니다.
+자세한 내용은 [`../docker/README.md`](../docker/README.md)를 참고하세요.
 
 ```bash
 SPRING_PROFILES_ACTIVE=mysql ./gradlew bootRun
 ```
 
-환경변수로 연결 정보를 변경할 수도 있습니다.
+환경변수로 연결 정보를 변경할 수도 있습니다. (예시는 RTX 4090 노트북의 `3308` 기준)
 
 ```bash
 SPRING_PROFILES_ACTIVE=mysql \
-DB_URL='jdbc:mysql://localhost:3307/fitness_medical?serverTimezone=Asia/Seoul&characterEncoding=UTF-8' \
+DB_URL='jdbc:mysql://localhost:3308/fitness_medical?serverTimezone=Asia/Seoul&characterEncoding=UTF-8' \
 DB_USERNAME=fitness_user \
 DB_PASSWORD=fitness_dev_2026 \
 ./gradlew bootRun

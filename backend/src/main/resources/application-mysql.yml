@@ -4,9 +4,10 @@
 spring:
   datasource:
     # ${환경변수:기본값} 문법은 환경변수가 없을 때 콜론 뒤의 값을 사용합니다.
-    # MySQL 컨테이너 내부 포트는 3306이지만, Mac에서는 3307로 연결합니다.
-    # 기존 MariaDB가 Mac의 3306을 사용하므로 두 DB는 충돌하지 않습니다.
-    url: ${DB_URL:jdbc:mysql://localhost:3307/fitness_medical?serverTimezone=Asia/Seoul&characterEncoding=UTF-8}
+    # 호스트 포트는 환경마다 다를 수 있습니다.
+    # 기본값 3308 = RTX 4090 노트북(Windows)용 (로컬 mysqld가 3307 점유).
+    # 다른 환경은 DB_URL 환경변수로 바꾸거나, docker-compose ports와 맞춰 수정하세요.
+    url: ${DB_URL:jdbc:mysql://localhost:3308/fitness_medical?serverTimezone=Asia/Seoul&characterEncoding=UTF-8}
     username: ${DB_USERNAME:fitness_user}
 
     # 아래 기본 비밀번호는 로컬 학습용입니다.
