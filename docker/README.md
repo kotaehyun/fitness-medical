@@ -11,7 +11,8 @@
 |---|---|---:|---|
 | MariaDB | Homebrew / 로컬 | 3306 | 기존 로컬 프로젝트 |
 | 로컬 mysqld | Windows 서비스 등 | 3307 | RTX 4090 노트북에 이미 점유됨 |
-| MySQL 8.4 | Docker | **3308** | Fitness Medical (**RTX 4090 노트북**) |
+| MySQL 8.4 | Docker | **3308** | Fitness Medical 정형 데이터 (**RTX 4090 노트북**) |
+| MongoDB 7 | Docker | 27017 | AI RAG 문서·Chunk (비정형) |
 
 ## MySQL 실행
 
@@ -20,11 +21,19 @@ cd docker
 docker compose up -d mysql
 ```
 
+## MongoDB 실행
+
+```bash
+cd docker
+docker compose up -d mongodb
+```
+
 ## 상태 확인
 
 ```bash
 docker compose ps
 docker logs fitness-medical-mysql
+docker logs fitness-medical-mongodb
 ```
 
 ## 접속 정보
@@ -48,10 +57,25 @@ docker exec -it fitness-medical-mysql \
   mysql -u fitness_user -p fitness_medical
 ```
 
+## MongoDB 접속 정보
+
+```text
+Host: localhost
+Port: 27017
+Database: fitness_medical_ai
+URI: mongodb://localhost:27017
+```
+
+터미널 접속:
+
+```bash
+docker exec -it fitness-medical-mongodb mongosh fitness_medical_ai
+```
+
 ## 종료
 
 ```bash
-docker compose stop mysql
+docker compose stop mysql mongodb
 ```
 
 `docker compose down`은 컨테이너를 제거하지만 named volume은 유지합니다. `down -v`는 DB 데이터까지 삭제하므로 학습 데이터를 지울 의도가 있을 때만 사용합니다.

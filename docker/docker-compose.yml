@@ -29,5 +29,24 @@ services:
       timeout: 5s
       retries: 20
 
+  # RAG Document/Chunk용 (MySQL과 역할 분리)
+  mongodb:
+    image: mongo:7
+    container_name: fitness-medical-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: fitness_medical_ai
+      TZ: Asia/Seoul
+    volumes:
+      - fitness_mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
 volumes:
   fitness_mysql_data:
+  fitness_mongo_data:

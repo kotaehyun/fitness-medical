@@ -13,3 +13,10 @@ backend/build/
 *.iml
 .vite/
 .claude/
+
+
+# AI service
+ai-service/.venv/
+ai-service/__pycache__/
+ai-service/**/__pycache__/
+ai-service/chroma_data/
