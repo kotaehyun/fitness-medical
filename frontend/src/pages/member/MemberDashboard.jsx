@@ -21,7 +21,7 @@ import {
   Home,
   MessageSquareText,
   Moon,
-  Settings,
+  Sparkles,
   Target,
   Weight,
 } from 'lucide-react';
@@ -35,6 +35,7 @@ import { useFeedback, useMemberData, useRecords } from '../../hooks/useDashboard
 export const memberNav = [
   { label: '홈', path: '/member', icon: Home },
   { label: '건강 기록', path: '/member/records', icon: ClipboardList },
+  { label: '생활 습관 안내', path: '/member/guide', icon: Sparkles },
   { label: '목표 관리', path: '/member/goals', icon: Target },
   { label: '전문가 피드백', path: '/member/feedback', icon: MessageSquareText },
   { label: '예약', path: '/member/appointments', icon: CalendarDays },

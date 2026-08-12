@@ -32,6 +32,7 @@ cd backend
 | GET | `/api/members/{id}/records` | 회원 건강 기록 조회 |
 | POST | `/api/members/{id}/records` | 건강 기록 등록 |
 | GET | `/api/members/{id}/feedback` | 회원 피드백 조회 |
+| POST | `/api/ai/ask` | FastAPI RAG 생활 안내 질문 (`fitness.ai.base-url`) |
 
 ## 패키지 구조
 
@@ -106,3 +107,27 @@ DB_PASSWORD=fitness_dev_2026 \
 ## 프론트엔드 연동
 
 프론트 개발 서버 `http://localhost:5173`과 `http://localhost:5174`에서 `/api/**`를 호출할 수 있도록 CORS가 설정되어 있습니다. 세션 로그인은 `JSESSIONID` 쿠키를 사용하므로 프론트 요청에 credentials 포함이 필요합니다. CORS 또는 서버 포트를 변경한 뒤에는 백엔드를 재시작해야 합니다.
+
+## AI 서비스 연동
+
+`POST /api/ai/ask`는 FastAPI의 `POST /ask`를 중계합니다. 기본 URL은 `application.yml`의 `fitness.ai.base-url`이며, 환경변수 `AI_BASE_URL`로 덮어쓸 수 있습니다.
+
+```bash
+# FastAPI (별도 터미널)
+cd ai-service
+.\.venv\Scripts\activate
+uvicorn app.main:app --reload --port 8000
+
+# Spring (AI_BASE_URL 기본값 http://127.0.0.1:8000)
+cd backend
+.\gradlew.bat bootRun
+```
+
+요청 예:
+
+```json
+POST /api/ai/ask
+{ "query": "잠은 어떻게 자면 좋나요?", "nResults": 5 }
+```
+
+AI 서비스가 꺼져 있거나 타임아웃이면 `503`과 안내 메시지를 반환합니다. 의료 진단·처방 API가 아닙니다.

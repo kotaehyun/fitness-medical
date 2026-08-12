@@ -80,6 +80,19 @@ public class GlobalExceptionHandler {
                 ));
     }
 
+    // FastAPI·Ollama 불가 → 503: 의존 서비스 문제. 클라이언트 입력 오류(4xx)와 구분
+    @ExceptionHandler(AiServiceUnavailableException.class)
+    public ResponseEntity<ApiErrorResponse> handleAiUnavailable(
+            AiServiceUnavailableException exception
+    ) {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(new ApiErrorResponse(
+                        LocalDateTime.now(),
+                        HttpStatus.SERVICE_UNAVAILABLE.value(),
+                        exception.getMessage()
+                ));
+    }
+
     // @Valid 실패 → 400: Bean Validation은 Controller 진입 전/직후에 Spring이 검사
     // Service까지 내려가지 않으므로 "입력 형식 오류"와 "비즈니스 400"을 Handler에서 같은 status로 통일
     @ExceptionHandler(MethodArgumentNotValidException.class)

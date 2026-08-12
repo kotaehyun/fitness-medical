@@ -69,4 +69,15 @@ export const mockService = {
     healthRecords.unshift(created);
     return created;
   },
+
+  async askLifestyleGuide(query) {
+    await delay(500);
+    return {
+      answer:
+        `모의 응답입니다. "${query}"에 대해 규칙적인 생활 습관을 유지해 보세요. ` +
+        '이 안내는 의료 진단이나 처방이 아닙니다.',
+      model: 'mock',
+      sources: [],
+    };
+  },
 };

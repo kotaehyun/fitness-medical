@@ -154,4 +154,16 @@ export const apiService = {
     });
     return mapRecord(data);
   },
+
+  /**
+   * [공부/면접] Spring → FastAPI RAG 질문
+   * Q. 왜 FastAPI를 프론트에서 직접 안 부르나?
+   * A. 세션·CORS·추후 권한을 Backend에서 통일. mock 모드에선 안내만 반환.
+   */
+  async askLifestyleGuide(query, nResults = 5) {
+    return request('/ai/ask', {
+      method: 'POST',
+      body: JSON.stringify({ query, nResults }),
+    });
+  },
 };

@@ -23,6 +23,7 @@ import { PlaceholderPage } from '../pages/common/PlaceholderPage';
 import { LandingPage } from '../pages/landing/LandingPage';
 import { HealthRecordsPage } from '../pages/member/HealthRecordsPage';
 import { MemberFeedbackPage } from '../pages/member/MemberFeedbackPage';
+import { MemberGuidePage } from '../pages/member/MemberGuidePage';
 import { MemberDashboard, memberNav } from '../pages/member/MemberDashboard';
 import { MemberDetailPage } from '../pages/professional/MemberDetailPage';
 import { MemberManagementPage } from '../pages/professional/MemberManagementPage';
@@ -85,6 +86,14 @@ export function AppRouter() {
         element={
           <ProtectedRoute allowedRole="MEMBER">
             <MemberFeedbackPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/member/guide"
+        element={
+          <ProtectedRoute allowedRole="MEMBER">
+            <MemberGuidePage />
           </ProtectedRoute>
         }
       />
