@@ -38,3 +38,9 @@ logging:
     com.fitnessmedical: DEBUG
     # Spring Framework 자체 로그는 너무 많지 않도록 INFO로 유지합니다.
     org.springframework: INFO
+
+fitness:
+  ai:
+    # FastAPI AI 서비스. 비밀번호·키는 넣지 않는다.
+    # AI_BASE_URL 환경변수가 있으면 그 값을 쓴다.
+    base-url: ${AI_BASE_URL:http://127.0.0.1:8000}
