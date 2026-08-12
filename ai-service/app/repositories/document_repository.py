@@ -17,6 +17,8 @@ A. 한 문서의 Chunk는 여러 개다. 재분할 때 전부 지워야 하므�
    원문(documents)은 지우지 않는다.
 """
 
+from __future__ import annotations
+
 from datetime import UTC, datetime
 
 from bson import ObjectId

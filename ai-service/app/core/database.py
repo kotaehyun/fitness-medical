@@ -17,6 +17,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
+from app.core.chroma import close_chroma, init_chroma
 from app.core.config import settings
 
 _client: AsyncIOMotorClient | None = None
@@ -42,7 +43,9 @@ async def lifespan(app: FastAPI):
         _client = None
         _db = None
 
+    init_chroma()
     yield
+    close_chroma()
 
     if _client is not None:
         _client.close()

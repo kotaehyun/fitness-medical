@@ -9,6 +9,7 @@ A. 프로세스(앱) 생존과 DB 연결은 다른 문제다.
 
 from fastapi import APIRouter
 
+from app.core.chroma import get_collection
 from app.core.database import get_database
 
 router = APIRouter(tags=["health"])
@@ -19,4 +20,5 @@ def health():
     return {
         "status": "ok",
         "mongodb": "connected" if get_database() is not None else "disconnected",
+        "chroma": "connected" if get_collection() is not None else "disconnected",
     }

@@ -16,15 +16,15 @@ A. GET은 조회만. POST /split은 본문을 나누어 Chunk를 만든다(부�
 
 from fastapi import APIRouter, Query
 
+from app.core.chroma import get_collection
 from app.core.database import get_database
 from app.repositories.document_repository import DocumentRepository
-from app.services.document_service import DocumentService
-from app.schemas.document import RagDocumentCreate, RagDocumentResponse
 from app.schemas.document import (
     ChunkResponse,
     RagDocumentCreate,
     RagDocumentResponse,
 )
+from app.services.document_service import DocumentService
 
 router = APIRouter(
     prefix="/documents",
@@ -36,7 +36,7 @@ def _repo() -> DocumentRepository:
     return DocumentRepository(get_database())
 
 def _service() -> DocumentService:
-    return DocumentService(_repo())
+    return DocumentService(_repo(), get_collection())
 
 
 @router.post("", response_model=RagDocumentResponse, status_code=201)

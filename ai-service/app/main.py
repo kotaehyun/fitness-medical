@@ -14,11 +14,12 @@ A. 앱 시작/종료 훅. MongoDB connect/close를 여기서 연결한다.
 from fastapi import FastAPI
 
 from app.core.database import lifespan
-from app.routers import documents, health
+from app.routers import documents, health, search
 
 app = FastAPI(title="Fitness Medical AI Service", lifespan=lifespan)
 app.include_router(health.router)
 app.include_router(documents.router)
+app.include_router(search.router)
 
 
 @app.get("/")

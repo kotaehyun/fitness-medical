@@ -45,3 +45,17 @@ class ChunkResponse(BaseModel):
     chunk_index: int
     content: str
     created_at: datetime
+
+
+class SearchRequest(BaseModel):
+    query: str = Field(min_length=1, max_length=500)
+    n_results: int = Field(default=5, ge=1, le=20)
+
+
+class SearchHit(BaseModel):
+    chunk_id: str
+    document_id: str
+    chunk_index: int
+    title: str
+    content: str
+    distance: float | None = None
