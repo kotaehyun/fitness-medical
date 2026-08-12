@@ -59,3 +59,14 @@ class SearchHit(BaseModel):
     title: str
     content: str
     distance: float | None = None
+
+
+class AskRequest(BaseModel):
+    query: str = Field(min_length=1, max_length=500)
+    n_results: int = Field(default=5, ge=1, le=20)
+
+
+class AskResponse(BaseModel):
+    answer: str
+    model: str
+    sources: list[SearchHit]
