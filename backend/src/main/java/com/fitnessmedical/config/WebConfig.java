@@ -29,8 +29,13 @@ public class WebConfig implements WebMvcConfigurer {
     public void addCorsMappings(@NonNull CorsRegistry registry) {
         // /api/** 만 허용 — 정적 리소스·H2 콘솔 등 불필요한 경로까지 열지 않음
         registry.addMapping("/api/**")
-                // Vite 기본 포트 + 대체 포트(동시에 두 dev 서버 띄울 때)
-                .allowedOrigins("http://localhost:5173", "http://localhost:5174")
+                // localhost / 127.0.0.1 은 브라우저에서 서로 다른 origin
+                .allowedOrigins(
+                        "http://localhost:5173",
+                        "http://localhost:5174",
+                        "http://127.0.0.1:5173",
+                        "http://127.0.0.1:5174"
+                )
                 .allowedMethods("GET", "POST", "PUT", "DELETE")
                 .allowedHeaders("*")
                 // 세션 쿠키(JSESSIONID)를 cross-origin 요청에 포함 — 로그인 상태 유지용

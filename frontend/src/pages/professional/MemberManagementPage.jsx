@@ -111,7 +111,8 @@ export function MemberManagementPage() {
               </span>
               <span className="member-actions">
                 <button
-                  className="text-button"
+                  type="button"
+                  className="action-btn"
                   onClick={() => setEditingMember(member)}
                   disabled={deleteMutation.isPending}
                 >
@@ -119,7 +120,8 @@ export function MemberManagementPage() {
                   수정
                 </button>
                 <button
-                  className="text-button"
+                  type="button"
+                  className="action-btn"
                   onClick={() => {
                     if (window.confirm(member.name + ' 회원을 삭제할까요?')) {
                       deleteMutation.mutate(member.id);
@@ -130,7 +132,7 @@ export function MemberManagementPage() {
                   <Trash2 size={14} />
                   삭제
                 </button>
-                <Link to={'/professional/members/' + member.id} className="text-button">
+                <Link to={'/professional/members/' + member.id} className="action-btn detail">
                   상세보기
                   <ArrowRight size={14} />
                 </Link>
