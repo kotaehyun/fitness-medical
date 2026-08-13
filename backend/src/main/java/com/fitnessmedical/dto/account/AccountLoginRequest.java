@@ -15,11 +15,11 @@ import jakarta.validation.constraints.NotBlank;
  */
 public record AccountLoginRequest(
 
-        @NotBlank(message = " 로그인 아이디는 필수입니다. ")
+        @NotBlank(message = "로그인 아이디는 필수입니다.")
         String loginId,
 
         // @NotBlank: null·빈 문자열 거부 — 인증 전 평문, 로깅·응답 금지
-        @NotBlank(message = " 비밀번호는 필수입니다. ")
+        @NotBlank(message = "비밀번호는 필수입니다.")
         String password
 ) {
 }

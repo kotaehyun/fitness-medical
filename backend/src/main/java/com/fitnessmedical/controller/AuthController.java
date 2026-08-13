@@ -38,7 +38,8 @@ import org.springframework.security.web.context.SecurityContextRepository;
  *    이후 요청마다 세션에서 복원되어 @AuthenticationPrincipal로 principal을 주입받습니다.
  *
  * 예외( Service/GlobalExceptionHandler ): InvalidRequestException 400,
- *   DuplicateResourceException 409, InvalidCredentialsException 401
+ *   DuplicateResourceException·DataIntegrityViolationException 409,
+ *   InvalidCredentialsException 401
  */
 @RestController
 @RequestMapping("/api/auth")

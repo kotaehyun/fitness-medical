@@ -36,14 +36,17 @@ public class MemberAuthorizationService {
     }
 
     public Account requireAccount(String loginId) {
+        // region [하드코딩] 로그인 계정 조회
         if (loginId == null || loginId.isBlank()) {
             throw new InvalidCredentialsException("로그인이 필요합니다.");
         }
         return accountRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new InvalidCredentialsException("로그인이 필요합니다."));
+        // endregion
     }
 
     public Account requireProfessional(String loginId) {
+        // region [하드코딩] 전문가 권한·면허 인증
         Account account = requireAccount(loginId);
         if (account.getRole() != AccountRole.PROFESSIONAL) {
             throw new ForbiddenException("전문가 권한이 필요합니다.");
@@ -53,9 +56,11 @@ public class MemberAuthorizationService {
             throw new ForbiddenException("전문직 인증이 완료되지 않았습니다.");
         }
         return account;
+        // endregion
     }
 
     public void assertCanAccessMember(String loginId, Long memberId) {
+        // region [하드코딩] MEMBER 소유권 / PROFESSIONAL 전체 접근
         Account account = requireAccount(loginId);
         if (account.getRole() == AccountRole.PROFESSIONAL) {
             return;
@@ -67,5 +72,6 @@ public class MemberAuthorizationService {
         if (linked == null || linked.getId() == null || !linked.getId().equals(memberId)) {
             throw new ForbiddenException("해당 회원 데이터에 접근할 수 없습니다.");
         }
+        // endregion
     }
 }

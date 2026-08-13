@@ -2,6 +2,7 @@ package com.fitnessmedical.common;
 
 import java.time.LocalDateTime;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
  *
  * Q. 예외 → HTTP 매핑 요약?
  * A. ResourceNotFoundException → 404, DuplicateResourceException → 409,
+ *    DataIntegrityViolationException(UNIQUE 레이스) → 409,
  *    InvalidCredentialsException → 401, ForbiddenException → 403,
  *    InvalidRequestException → 400, MethodArgumentNotValidException(@Valid) → 400.
  *
@@ -53,6 +55,24 @@ public class GlobalExceptionHandler {
                         exception.getMessage()
                 ));
     }
+
+    /**
+     * exists 검사와 save 사이 레이스에서 UNIQUE가 막으면 DataIntegrityViolationException이 난다.
+     * 어느 제약(loginId/member/면허)인지 안전하게 구분하기 어려워 일반 문구로 409를 반환한다.
+     */
+    // region [하드코딩] UNIQUE 레이스 → 409
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiErrorResponse> handleDataIntegrity(
+            DataIntegrityViolationException exception
+    ) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ApiErrorResponse(
+                        LocalDateTime.now(),
+                        HttpStatus.CONFLICT.value(),
+                        "요청이 이미 처리되었거나 중복된 값입니다."
+                ));
+    }
+    // endregion
 
     // 자격 증명 불일치 → 401: 인증 실패(재로그인 필요). 403과 구분
     @ExceptionHandler(InvalidCredentialsException.class)
