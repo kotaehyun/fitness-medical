@@ -25,13 +25,18 @@ import {
   Mail,
 } from 'lucide-react';
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Logo } from '../../components/common/Logo';
 import { Disclaimer } from '../../components/common/Disclaimer';
 import { apiService } from '../../services/apiService';
+import { cacheAuthAccount, homePath, useAuthSession, useLogout } from '../../hooks/useAuthSession';
 
 export function LoginPage() {
   const nav = useNavigate();
+  const queryClient = useQueryClient();
+  const { isAuthenticated, isLoading, role, account } = useAuthSession();
+  const logout = useLogout('/login');
   const [params] = useSearchParams();
   const preferred = params.get('role');
   const [loginId, setLoginId] = useState('');
@@ -46,23 +51,22 @@ export function LoginPage() {
 
     try {
       const account = await apiService.login(loginId, password);
-      // 실계정 로그인 — 데모 role 플래그 제거
+      // 실계정 로그인 — 데모 role 플래그 제거. /auth/me 401 캐시도 덮어쓴다.
       sessionStorage.removeItem('fitness-demo-role');
       const currentAccount = account?.role ? account : await apiService.getCurrentAccount();
+      cacheAuthAccount(queryClient, currentAccount);
       if (currentAccount.memberId) {
         // [면접] MEMBER 전용 — 이후 GET/POST records 경로에 사용
         sessionStorage.setItem('account-member-id', currentAccount.memberId);
       } else {
         sessionStorage.removeItem('account-member-id');
       }
-      const role = String(currentAccount?.role || '').toUpperCase();
-
-      if (role === 'MEMBER') {
-        nav('/member');
-      } else if (role === 'PROFESSIONAL') {
-        nav('/professional');
-      } else {
+      const nextRole = String(currentAccount?.role || '').toUpperCase();
+      const nextPath = homePath(nextRole);
+      if (nextPath === '/') {
         setError('로그인한 계정의 역할을 확인할 수 없습니다.');
+      } else {
+        nav(nextPath);
       }
     } catch (requestError) {
       // [면접] 에러 메시지에 password 포함 금지 — loginId만 사용자에게 안내
@@ -115,6 +119,32 @@ export function LoginPage() {
           </div>
           <span className="eyebrow">DEMO ACCOUNT</span>
           <h2>Fitness Medical 시작하기</h2>
+          {isLoading ? (
+            <p>로그인 상태를 확인하고 있습니다.</p>
+          ) : isAuthenticated ? (
+            <>
+              <p>
+                지금 <b>{account?.displayName || '계정'}</b>으로 로그인되어 있습니다.
+                다른 계정은 로그아웃 후 이용하세요.
+              </p>
+              <div className="demo-buttons">
+                <button type="button" onClick={() => nav(homePath(role))}>
+                  <span className="demo-icon">
+                    <HeartPulse />
+                  </span>
+                  <span>
+                    <b>대시보드로 이동</b>
+                    <small>현재 계정으로 계속하기</small>
+                  </span>
+                  <ArrowRight />
+                </button>
+              </div>
+              <button className="button primary full" type="button" onClick={logout}>
+                로그아웃
+              </button>
+            </>
+          ) : (
+            <>
           <p>체험할 역할을 선택하거나 계정으로 로그인하세요.</p>
           <div className="demo-buttons">
             <button
@@ -156,7 +186,7 @@ export function LoginPage() {
                   type="text"
                   value={loginId}
                   onChange={(event) => setLoginId(event.target.value)}
-                  placeholder="로그인 아이디를 입력하세요"
+                  placeholder="예: member01, admin01"
                   autoComplete="username"
                   required
                 />
@@ -184,6 +214,7 @@ export function LoginPage() {
               <button type="button">비밀번호 찾기</button>
             </div>
             {error && <p className="form-error" role="alert">{error}</p>}
+            <p className="auth-hint">로컬 시드: member01 · trainer01 · doctor01 · admin01 / password123</p>
             <button className="button primary full" type="submit" disabled={loading}>
               {loading ? '로그인 중...' : '로그인'}
             </button>
@@ -191,6 +222,8 @@ export function LoginPage() {
           <p className="auth-switch">
             계정이 없나요? <Link to="/signup">회원가입</Link>
           </p>
+            </>
+          )}
           <Disclaimer />
         </div>
       </main>

@@ -24,7 +24,7 @@ erDiagram
         VARCHAR login_id UK "로그인 아이디"
         VARCHAR password "암호화된 비밀번호"
         VARCHAR display_name "표시 이름"
-        VARCHAR role "MEMBER 또는 PROFESSIONAL"
+        VARCHAR role "MEMBER, PROFESSIONAL 또는 ADMIN"
         VARCHAR professional_type "TRAINER 또는 PHYSICIAN"
         VARCHAR license_number UK "전문의 면허 또는 트레이너 자격번호(NULL 허용)"
         BOOLEAN professional_verified "전문직 인증 여부"
@@ -58,7 +58,7 @@ erDiagram
 
 ### MEMBERS → ACCOUNTS
 
-`1:0..1` 관계입니다. MEMBER 역할 계정만 `member_id`로 회원과 연결되고, PROFESSIONAL은 `member_id`가 null입니다. `member_id`는 UNIQUE라서 한 회원당 계정은 최대 1개입니다.
+`1:0..1` 관계입니다. MEMBER 역할 계정만 `member_id`로 회원과 연결되고, PROFESSIONAL·ADMIN은 `member_id`가 null입니다. `member_id`는 UNIQUE라서 한 회원당 계정은 최대 1개입니다. ADMIN은 공개 가입 불가(시드)이며 전문직 `professional_verified`만 승인/해제합니다.
 
 ### MEMBERS → HEALTH_RECORDS
 

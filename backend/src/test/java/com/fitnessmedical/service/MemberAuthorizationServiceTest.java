@@ -114,6 +114,20 @@ class MemberAuthorizationServiceTest {
     }
 
     @Test
+    @DisplayName("ADMIN은 회원 데이터 API를 쓰지 않는다.")
+    void admin_cannotAccessMemberApis() {
+        Account admin = new Account("admin01", "encoded", "관리자", AccountRole.ADMIN, null);
+        given(accountRepository.findByLoginId("admin01")).willReturn(Optional.of(admin));
+
+        assertThatThrownBy(() -> authorizationService.assertCanAccessMember("admin01", 1L))
+                .isInstanceOf(ForbiddenException.class)
+                .hasMessage("해당 회원 데이터에 접근할 수 없습니다.");
+        assertThatThrownBy(() -> authorizationService.requireProfessional("admin01"))
+                .isInstanceOf(ForbiddenException.class)
+                .hasMessage("전문가 권한이 필요합니다.");
+    }
+
+    @Test
     @DisplayName("세션 loginId가 없으면 401 계열로 거절한다.")
     void missingLogin_throwsInvalidCredentials() {
         assertThatThrownBy(() -> authorizationService.requireAccount(null))

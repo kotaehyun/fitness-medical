@@ -25,7 +25,7 @@ public record AccountResponse(
         AccountRole role,
         ProfessionalType professionalType,
         boolean professionalVerified,
-        // MEMBER: 연결된 Member PK, PROFESSIONAL: null
+        // MEMBER: 연결된 Member PK, PROFESSIONAL·ADMIN: null
         Long memberId
 ) {
     public static AccountResponse from(Account account) {

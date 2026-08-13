@@ -10,9 +10,9 @@
  */
 import { Construction } from 'lucide-react';
 import { AppShell } from '../../components/layout/AppShell';
-export function PlaceholderPage({ nav, professional = false }) {
+export function PlaceholderPage({ nav, professional = false, workspaceLabel }) {
   return (
-    <AppShell nav={nav} professional={professional}>
+    <AppShell nav={nav} professional={professional} workspaceLabel={workspaceLabel}>
       <div className="placeholder card">
         <Construction />
         <h1>준비 중인 화면입니다</h1>

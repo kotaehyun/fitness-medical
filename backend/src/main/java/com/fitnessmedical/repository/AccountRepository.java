@@ -1,10 +1,12 @@
 package com.fitnessmedical.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.fitnessmedical.entity.Account;
+import com.fitnessmedical.entity.AccountRole;
 
 /**
  * [공부/면접] Account Entity용 Spring Data JPA Repository
@@ -34,4 +36,10 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
 
     // 전문의 면허번호 중복 가입 방지
     boolean existsByLicenseNumber(String licenseNumber);
+
+    // 관리자 승인 화면 — 미인증(false)이 위로 오도록 정렬
+    List<Account> findByRoleOrderByProfessionalVerifiedAscIdAsc(AccountRole role);
+
+    // 관리자 가입 현황 — MEMBER 계정 id 순
+    List<Account> findByRoleOrderByIdAsc(AccountRole role);
 }

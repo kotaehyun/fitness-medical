@@ -11,16 +11,22 @@
  *
  * Q. 가입 후 바로 로그인하는 이유?
  * A. 별도 로그인 입력을 줄인다. password는 요청 body로만 보내고 로그에 남기지 않는다.
+ *
+ * Q. 개인정보 약관은 왜 역할별로 나누나?
+ * A. 회원은 건강 기록, 전문가는 자격·면허와 회원 열람 책임이 다르다.
  */
 import { ArrowLeft, BriefcaseMedical, HeartPulse, LockKeyhole, Mail, UserRound } from 'lucide-react';
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Logo } from '../../components/common/Logo';
 import { Disclaimer } from '../../components/common/Disclaimer';
 import { apiService } from '../../services/apiService';
+import { cacheAuthAccount } from '../../hooks/useAuthSession';
 
 export function SignupPage() {
   const nav = useNavigate();
+  const queryClient = useQueryClient();
   const [params] = useSearchParams();
   const initialRole = params.get('role') === 'professional' ? 'PROFESSIONAL' : 'MEMBER';
   const [role, setRole] = useState(initialRole);
@@ -36,10 +42,20 @@ export function SignupPage() {
   const [goal, setGoal] = useState('규칙적인 생활 습관');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [agreedTerms, setAgreedTerms] = useState(false);
 
   async function handleSubmit(event) {
     event.preventDefault();
     setError('');
+    // 핵심 로직: 역할별 약관 동의 없으면 가입 불가
+    if (!agreedTerms) {
+      setError(
+        role === 'PROFESSIONAL'
+          ? '전문가 개인정보 처리방침에 동의해 주세요.'
+          : '회원 개인정보 처리방침에 동의해 주세요.',
+      );
+      return;
+    }
     setLoading(true);
 
     try {
@@ -68,6 +84,7 @@ export function SignupPage() {
       await apiService.signup(payload);
       const account = await apiService.login(loginId.trim(), password);
       sessionStorage.removeItem('fitness-demo-role');
+      cacheAuthAccount(queryClient, account);
       if (account.memberId) {
         sessionStorage.setItem('account-member-id', account.memberId);
       } else {
@@ -125,7 +142,10 @@ export function SignupPage() {
               <button
                 type="button"
                 className={role === 'MEMBER' ? 'selected' : ''}
-                onClick={() => setRole('MEMBER')}
+                onClick={() => {
+                  setRole('MEMBER');
+                  setAgreedTerms(false);
+                }}
               >
                 <HeartPulse size={16} />
                 일반 회원
@@ -133,7 +153,10 @@ export function SignupPage() {
               <button
                 type="button"
                 className={role === 'PROFESSIONAL' ? 'selected' : ''}
-                onClick={() => setRole('PROFESSIONAL')}
+                onClick={() => {
+                  setRole('PROFESSIONAL');
+                  setAgreedTerms(false);
+                }}
               >
                 <BriefcaseMedical size={16} />
                 전문가
@@ -273,19 +296,44 @@ export function SignupPage() {
                     value={licenseNumber}
                     onChange={(event) => setLicenseNumber(event.target.value)}
                     placeholder={
-                      professionalType === 'PHYSICIAN' ? '숫자 5~10자리' : '예: SP21001234 (우대)'
+                      professionalType === 'PHYSICIAN' ? '예: 987654' : '예: SP22005678'
                     }
                     required={professionalType === 'PHYSICIAN'}
                   />
                 </div>
                 <small className="signup-hint">
                   {professionalType === 'PHYSICIAN'
-                    ? '학습용 형식 확인입니다. 가입 후 관리자 승인 전까지 전문가 API는 사용할 수 없습니다.'
-                    : '선택(우대). 영문 2자 + 숫자 6~12자. 가입 직후는 미인증입니다.'}
+                    ? '예시 987654 (숫자 5~10자리). 시드 doctor01의 123456은 이미 사용 중입니다. 가입 후는 미인증입니다.'
+                    : '예시 SP22005678 (영문 2자 + 숫자 6~12자, 선택). 시드 trainer01의 SP21001234는 이미 사용 중입니다. 가입 후는 미인증입니다.'}
                 </small>
               </label>
             ) : null}
 
+            <label className="check terms-check">
+              <input
+                type="checkbox"
+                checked={agreedTerms}
+                onChange={(event) => setAgreedTerms(event.target.checked)}
+                required
+              />
+              <span>
+                {role === 'PROFESSIONAL' ? (
+                  <>
+                    <Link to="/privacy/professional" target="_blank" rel="noreferrer">
+                      전문가 개인정보 처리방침
+                    </Link>
+                    에 동의합니다.
+                  </>
+                ) : (
+                  <>
+                    <Link to="/privacy/member" target="_blank" rel="noreferrer">
+                      회원 개인정보 처리방침
+                    </Link>
+                    에 동의합니다.
+                  </>
+                )}
+              </span>
+            </label>
             {error ? (
               <p className="form-error" role="alert">
                 {error}

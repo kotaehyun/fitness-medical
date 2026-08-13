@@ -29,6 +29,7 @@ import { ProgressBar } from '../../components/common/ProgressBar';
 import { StateView } from '../../components/common/StateView';
 import { StatusBadge } from '../../components/common/StatusBadge';
 import { AppShell } from '../../components/layout/AppShell';
+import { useAuthSession } from '../../hooks/useAuthSession';
 import { useMembers } from '../../hooks/useDashboardData';
 export const professionalNav = [
   { label: '대시보드', path: '/professional', icon: Gauge },
@@ -39,7 +40,21 @@ export const professionalNav = [
   { label: '설정', path: '/professional/settings', icon: Settings },
 ];
 export function ProfessionalDashboard() {
-  const query = useMembers();
+  const { account, demoRole } = useAuthSession();
+  const pendingVerification = !demoRole && account?.professionalVerified === false;
+  const canListMembers =
+    demoRole === 'PROFESSIONAL' || account?.professionalVerified === true;
+  const query = useMembers({ enabled: canListMembers });
+  if (pendingVerification) {
+    return (
+      <AppShell nav={professionalNav} professional>
+        <StateView
+          type="empty"
+          message="전문직 인증 대기 중입니다. 관리자(admin01) 승인 후 회원 목록을 볼 수 있습니다."
+        />
+      </AppShell>
+    );
+  }
   if (query.isLoading)
     return (
       <AppShell nav={professionalNav} professional>

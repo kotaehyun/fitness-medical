@@ -112,7 +112,8 @@ public class AccountService {
      * - PROFESSIONAL → professionalType 필수
      * - TRAINER → 생활스포츠지도사 자격번호는 우대(선택). 없으면 저장만, 있으면 형식 검사
      * - PHYSICIAN → 면허번호(숫자 5~10자리) 필수, 형식만 검사
-     * - 공개 가입은 형식이 맞아도 verified=false. 관리자 승인(시드 계정) 전까지 전문가 API 불가
+     * - 공개 가입은 형식이 맞아도 verified=false. 관리자(ADMIN) 승인 전까지 전문가 API 불가
+     * - ADMIN 역할은 공개 가입 불가
      */
     private ProfessionalCredentials resolveProfessionalCredentials(AccountCreateRequest request) {
         // region [하드코딩] 전문직 유형·자격/면허 규칙
@@ -123,6 +124,10 @@ public class AccountService {
                 throw new InvalidRequestException("회원 계정은 전문직 유형·자격/면허번호를 가질 수 없습니다.");
             }
             return new ProfessionalCredentials(null, null, false);
+        }
+
+        if (request.role() == AccountRole.ADMIN) {
+            throw new InvalidRequestException("관리자 계정은 공개 가입할 수 없습니다.");
         }
 
         if (request.role() != AccountRole.PROFESSIONAL) {

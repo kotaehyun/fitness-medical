@@ -8,6 +8,7 @@ import com.fitnessmedical.service.AccountService;
 import jakarta.validation.Valid;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -129,6 +130,23 @@ public class AuthController {
         return accountService.findResponseByLoginId(
                 userDetails.getUsername()
         );
+    }
+
+    /**
+     * [공부/면접] POST /api/auth/logout — 세션 무효화
+     *
+     * SecurityContext와 HTTP 세션을 지운다. 이후 /auth/me는 401이다.
+     */
+    @PostMapping("/logout")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void logout(HttpServletRequest httpRequest) {
+        // region [핵심로직] SecurityContext + HTTP 세션 무효화
+        SecurityContextHolder.clearContext();
+        HttpSession session = httpRequest.getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
+        // endregion
     }
 
 }

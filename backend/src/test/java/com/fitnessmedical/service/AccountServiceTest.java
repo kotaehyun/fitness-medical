@@ -216,6 +216,30 @@ class AccountServiceTest {
     }
 
     @Test
+    @DisplayName("관리자 역할은 공개 가입할 수 없다.")
+    void create_adminRole_throwsInvalidRequestException() {
+        AccountCreateRequest request = new AccountCreateRequest(
+                "admin01",
+                "password123",
+                "관리자",
+                AccountRole.ADMIN,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+
+        assertThatThrownBy(() -> accountService.create(request))
+                .isInstanceOf(InvalidRequestException.class)
+                .hasMessage("관리자 계정은 공개 가입할 수 없습니다.");
+    }
+
+    @Test
     @DisplayName("전문의는 면허번호가 없으면 가입할 수 없다.")
     void create_physicianWithoutLicense_throwsInvalidRequestException() {
         AccountCreateRequest request = new AccountCreateRequest(

@@ -15,7 +15,7 @@ Member 1 ─── N HealthRecord
 Member 1 ─── N Feedback
 ```
 
-- MEMBER 계정만 회원과 1:1로 연결할 수 있습니다. PROFESSIONAL은 `member_id`가 null입니다.
+- MEMBER 계정만 회원과 1:1로 연결할 수 있습니다. PROFESSIONAL·ADMIN은 `member_id`가 null입니다.
 - 회원 한 명은 여러 건강 기록을 작성할 수 있습니다.
 - 회원 한 명은 여러 전문가 피드백을 받을 수 있습니다.
 - `accounts.member_id`, `health_records.member_id`, `feedbacks.member_id`는 `members.id`를 참조하는 외래키입니다.

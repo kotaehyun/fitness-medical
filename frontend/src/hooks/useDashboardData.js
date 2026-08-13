@@ -57,6 +57,13 @@ export function useFeedback(id) {
   });
 }
 
-export function useMembers() {
-  return useQuery({ queryKey: ['members'], queryFn: healthService.getMembers });
+export function useMembers(options = {}) {
+  // enabled는 호출부가 넘긴다. 훅 안에서 useAuthSession을 쓰면 훅 순서가 깨질 수 있다.
+  const enabled = options.enabled !== false;
+  return useQuery({
+    queryKey: ['members'],
+    queryFn: healthService.getMembers,
+    enabled,
+    retry: false,
+  });
 }

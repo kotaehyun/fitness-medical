@@ -30,13 +30,18 @@ cd backend
 | `member01` | 회원(김순자) |
 | `trainer01` | 트레이너(자격번호 `SP21001234`, 시드 인증 완료) |
 | `doctor01` | 전문의(면허 `123456`, 시드 인증 완료) |
+| `admin01` | 관리자(가입 현황 + 전문직 승인/해제) |
 
-공개 회원가입으로 만든 전문가는 `professionalVerified=false`라서 회원 API·피드백을 쓸 수 없습니다. 로컬에서 전문가 기능을 보려면 위 시드 계정을 사용하세요.
+공개 회원가입으로 만든 전문가는 `professionalVerified=false`라서 회원 API·피드백을 쓸 수 없습니다. `admin01`로 로그인하면 일반 회원 가입 현황과 전문직 승인을 볼 수 있습니다. 시드 전문가(`trainer01`/`doctor01`)는 이미 인증된 상태입니다.
 
 ## API
 
 | Method | URL | 설명 |
 |---|---|---|
+| GET | `/api/admin/members` | 일반 회원 가입 현황(관리자) |
+| GET | `/api/admin/professionals` | 전문직 목록(관리자, 미인증 우선) |
+| POST | `/api/admin/professionals/{id}/verify` | 전문직 인증 승인(관리자) |
+| POST | `/api/admin/professionals/{id}/revoke` | 전문직 인증 해제(관리자) |
 | GET | `/api/members` | 전체 회원 조회 |
 | GET | `/api/members/{id}` | 회원 상세 조회 |
 | GET | `/api/members/{id}/records` | 회원 건강 기록 조회 |

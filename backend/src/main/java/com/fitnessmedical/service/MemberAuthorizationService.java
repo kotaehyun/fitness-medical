@@ -22,7 +22,7 @@ import com.fitnessmedical.repository.AccountRepository;
  *
  * Q. professionalVerified를 여기서 막으면?
  * A. 역할이 PROFESSIONAL이어도 공개 가입은 verified=false다.
- *    관리자 승인(시드 계정) 전에는 회원 조회·피드백을 막는다.
+ *    관리자(ADMIN)가 professionalVerified=true로 바꾸기 전에는 회원 조회·피드백을 막는다.
  */
 @Service
 @Transactional(readOnly = true)

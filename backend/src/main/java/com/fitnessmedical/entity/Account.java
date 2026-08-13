@@ -16,7 +16,7 @@ import jakarta.persistence.*;
  * <p><b>Q. Account–Member @OneToOne 관계는?</b><br>
  * A. {@link AccountRole#MEMBER} 계정만 {@link Member}와 1:1로 연결됩니다.
  * {@code member_id} FK가 {@code unique}이므로 한 회원당 계정은 최대 1개입니다.
- * {@link AccountRole#PROFESSIONAL}은 {@code member == null}이어야 합니다.</p>
+ * {@link AccountRole#PROFESSIONAL}·{@link AccountRole#ADMIN}은 {@code member == null}이어야 합니다.</p>
  *
  * <p><b>Q. password·면허번호를 로그·응답에 넣어도 되나?</b><br>
  * A. 절대 안 됩니다. {@link AccountResponse}에도 password·licenseNumber는 포함하지 않습니다.</p>
@@ -52,7 +52,7 @@ public class Account {
     @Column(name = "display_name", nullable = false, length = 30)
     private String displayName;
 
-    // EnumType.STRING → DB에 "MEMBER"/"PROFESSIONAL" 문자열 저장 (ORDINAL보다 안전)
+    // EnumType.STRING → DB에 "MEMBER"/"PROFESSIONAL"/"ADMIN" 문자열 저장 (ORDINAL보다 안전)
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private AccountRole role;
@@ -68,7 +68,7 @@ public class Account {
     @Column(name = "professional_verified", nullable = false)
     private boolean professionalVerified;
 
-    // MEMBER 역할일 때만 Member와 1:1 연결. PROFESSIONAL은 null.
+    // MEMBER 역할일 때만 Member와 1:1 연결. PROFESSIONAL·ADMIN은 null.
     // LAZY: member 필드 접근 시점까지 JOIN 지연 → N+1 주의, 트랜잭션 내 접근 권장
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", unique = true)
@@ -139,6 +139,11 @@ public class Account {
 
     public boolean isProfessionalVerified() {
         return professionalVerified;
+    }
+
+    // 관리자 승인/해제 전용. 공개 가입은 항상 false로 저장된다.
+    public void setProfessionalVerified(boolean professionalVerified) {
+        this.professionalVerified = professionalVerified;
     }
 
     public Member getMember() {

@@ -2,10 +2,10 @@
  * [공부/면접] 앱 라우팅 (router.jsx)
  *
  * Q. ProtectedRoute가 하는 일은?
- * A. (1) 데모 role(sessionStorage) 또는 (2) /auth/me API로 역할 확인 후
+ * A. useAuthSession으로 데모 role 또는 /auth/me를 확인한 뒤
  *    allowedRole과 다르면 리다이렉트, 미인증이면 /login.
  *
- * Q. demoRole 있을 때 useQuery enabled: !demoRole ?
+ * Q. demoRole 있을 때 /auth/me를 안 부르는 이유?
  * A. 데모 체험은 쿠키 세션 없이 sessionStorage만으로 통과.
  *    API 호출을 끄면 401·불필요한 로딩을 피한다.
  *
@@ -16,11 +16,11 @@
  * A. replace는 history 스택에 남기지 않아 뒤로가기 시 보호 라우트로 재진입을 줄인다.
  */
 import { Navigate, Route, Routes } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
 import { StateView } from '../components/common/StateView';
 import { LoginPage } from '../pages/auth/LoginPage';
 import { SignupPage } from '../pages/auth/SignupPage';
 import { PlaceholderPage } from '../pages/common/PlaceholderPage';
+import { PrivacyPage } from '../pages/common/PrivacyPage';
 import { LandingPage } from '../pages/landing/LandingPage';
 import { HealthRecordsPage } from '../pages/member/HealthRecordsPage';
 import { MemberFeedbackPage } from '../pages/member/MemberFeedbackPage';
@@ -32,30 +32,23 @@ import {
   ProfessionalDashboard,
   professionalNav,
 } from '../pages/professional/ProfessionalDashboard';
-import { apiService } from '../services/apiService';
+import { AdminVerificationPage, adminNav } from '../pages/admin/AdminVerificationPage';
+import { homePath, useAuthSession } from '../hooks/useAuthSession';
 
 function ProtectedRoute({ allowedRole, children }) {
-  // [면접] LoginPage enterDemo()가 설정 — 'MEMBER' | 'PROFESSIONAL'
-  const demoRole = sessionStorage.getItem('fitness-demo-role');
-  const accountQuery = useQuery({
-    queryKey: ['auth', 'me'],
-    queryFn: apiService.getCurrentAccount,
-    // 데모 모드면 /auth/me 호출 안 함 (세션 없음)
-    enabled: !demoRole,
-    retry: false,
-  });
+  const { isLoading, isAuthenticated, role } = useAuthSession();
 
-  if (!demoRole && accountQuery.isLoading) {
+  if (isLoading) {
     return <StateView type="loading" message="로그인 정보를 확인하고 있습니다." />;
   }
 
-  if (!demoRole && (accountQuery.isError || !accountQuery.data)) {
+  if (!isAuthenticated || !role) {
     return <Navigate to="/login" replace />;
   }
 
-  const role = demoRole || String(accountQuery.data.role || '').toUpperCase();
   if (role !== allowedRole) {
-    return <Navigate to={role === 'PROFESSIONAL' ? '/professional' : '/member'} replace />;
+    const next = homePath(role);
+    return <Navigate to={next === '/' ? '/login' : next} replace />;
   }
 
   return children;
@@ -67,6 +60,8 @@ export function AppRouter() {
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
+      <Route path="/privacy/member" element={<PrivacyPage audience="MEMBER" />} />
+      <Route path="/privacy/professional" element={<PrivacyPage audience="PROFESSIONAL" />} />
       <Route
         path="/member"
         element={
@@ -136,6 +131,22 @@ export function AppRouter() {
         element={
           <ProtectedRoute allowedRole="PROFESSIONAL">
             <PlaceholderPage nav={professionalNav} professional />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute allowedRole="ADMIN">
+            <AdminVerificationPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/*"
+        element={
+          <ProtectedRoute allowedRole="ADMIN">
+            <PlaceholderPage nav={adminNav} workspaceLabel="관리자 워크스페이스" />
           </ProtectedRoute>
         }
       />

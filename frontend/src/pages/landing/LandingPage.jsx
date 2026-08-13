@@ -3,6 +3,7 @@
  *
  * Q. 이 페이지의 역할은?
  * A. 비로그인 마케팅·소개 화면. CTA로 /login?role=member|professional 데모 진입.
+ *    로그인된 채로 `/`에 오면 역할 홈(회원/전문가/관리자)으로 보낸다.
  *
  * Q. hero의 대시보드 미리보기는 실제 API 데이터인가?
  * A. 아니다. 정적 UI mockup — 시연용 가상 수치(의료 진단·처방 아님).
@@ -28,15 +29,26 @@ import {
   X,
 } from 'lucide-react';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { Disclaimer } from '../../components/common/Disclaimer';
 import { Logo } from '../../components/common/Logo';
 import { ImageStoryCarousel } from '../../components/common/ImageStoryCarousel';
+import { StateView } from '../../components/common/StateView';
+import { homePath, useAuthSession } from '../../hooks/useAuthSession';
 import wellnessWalk from '../../assets/images/wellness-walk.jpg';
 import medicalConsultation from '../../assets/images/medical-consultation-white-coat.jpg';
 import specialistTrainer from '../../assets/images/specialist-trainer-collaboration.jpg';
 export function LandingPage() {
   const [menu, setMenu] = useState(false);
+  const { isAuthenticated, isLoading, role } = useAuthSession();
+  // region [핵심로직] 로그인된 `/` 는 마케팅 랜딩이 아니라 역할 홈으로
+  if (isLoading) {
+    return <StateView type="loading" message="로그인 정보를 확인하고 있습니다." />;
+  }
+  if (isAuthenticated && role) {
+    return <Navigate to={homePath(role)} replace />;
+  }
+  // endregion
   const careStories = [
     {
       image: medicalConsultation,
@@ -323,7 +335,8 @@ export function LandingPage() {
         </div>
         <div className="footer-links">
           <a href="#about">서비스 안내</a>
-          <a href="#privacy">개인정보처리방침</a>
+          <Link to="/privacy/member">회원 개인정보처리방침</Link>
+          <Link to="/privacy/professional">전문가 개인정보처리방침</Link>
           <Link to="/login">체험하기</Link>
         </div>
         <Disclaimer />

@@ -28,6 +28,7 @@ import jakarta.validation.constraints.Size;
  * A. 공개 가입에서는 {@code memberId}를 받지 않는다. 보내면 400.
  * {@link AccountRole#MEMBER} → 프로필(gender/age 등)로 새 Member 생성.
  * {@link AccountRole#PROFESSIONAL} → {@code professionalType} 필수, 가입 직후 verified=false.
+ * {@link AccountRole#ADMIN} → 공개 가입 불가(시드만).
  * 전문의 {@code licenseNumber} 필수, 트레이너 자격번호는 우대(선택).</p>
  *
  * <p><b>Q. @NotBlank vs @NotNull?</b><br>

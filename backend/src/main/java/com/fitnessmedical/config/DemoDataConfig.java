@@ -122,6 +122,14 @@ public class DemoDataConfig {
                                                         ProfessionalType.PHYSICIAN,
                                                         "123456",
                                                         true
+                                        ),
+                                        // 슈퍼계정 — 공개 가입 전문가의 professionalVerified 승인/해제
+                                        new Account(
+                                                        "admin01",
+                                                        demoPassword,
+                                                        "관리자",
+                                                        AccountRole.ADMIN,
+                                                        null
                                         )
                         ));
                 };

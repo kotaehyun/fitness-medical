@@ -252,4 +252,12 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.message")
                         .value("공개 가입에서는 기존 회원을 연결할 수 없습니다."));
     }
+
+    @Test
+    @SuppressWarnings("null")
+    @DisplayName("로그아웃은 204를 반환한다.")
+    void logout_returns204() throws Exception {
+        mockMvc.perform(post("/api/auth/logout"))
+                .andExpect(status().isNoContent());
+    }
 }

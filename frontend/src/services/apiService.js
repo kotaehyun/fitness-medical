@@ -97,7 +97,40 @@ export const apiService = {
   },
 
   async getCurrentAccount() {
-    return mapAccount(await request('/auth/me'));
+    // region [핵심로직] /auth/me — 세션 있으면 Account, 없으면 null(로그아웃)
+    const response = await fetch(`${API_URL}/auth/me`, {
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    });
+    if (response.status === 401 || response.status === 403) {
+      return null;
+    }
+    if (!response.ok) {
+      const error = await response.json().catch(() => null);
+      throw new Error(error?.message || '서버 요청에 실패했습니다.');
+    }
+    return mapAccount(await response.json());
+    // endregion
+  },
+
+  async logout() {
+    await request('/auth/logout', { method: 'POST' });
+  },
+
+  async getMembersForAdmin() {
+    return request('/admin/members');
+  },
+
+  async getProfessionalsForAdmin() {
+    return request('/admin/professionals');
+  },
+
+  async verifyProfessional(accountId) {
+    return request(`/admin/professionals/${accountId}/verify`, { method: 'POST' });
+  },
+
+  async revokeProfessional(accountId) {
+    return request(`/admin/professionals/${accountId}/revoke`, { method: 'POST' });
   },
 
   async getMembers() {

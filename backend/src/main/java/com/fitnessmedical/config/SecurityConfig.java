@@ -1,15 +1,23 @@
 package com.fitnessmedical.config;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.config.Customizer;
+
+import jakarta.servlet.http.HttpServletResponse;
 
 
 /**
@@ -23,10 +31,11 @@ import org.springframework.security.config.Customizer;
  * A. permitAll — 누구나 접근(회원가입·로그인 API).
  *    authenticated — 로그인 세션 필요(/api/auth/me, /api/members/**).
  *    hasRole("PROFESSIONAL") — ROLE_PROFESSIONAL 권한 필요(피드백 작성 POST).
+ *    hasRole("ADMIN") — ROLE_ADMIN 권한 필요(전문직 승인 API).
  *
- * Q. csrf.disable()을 쓰는 이유와 주의?
- * A. REST + 세션/JSON API는 브라우저 form POST와 패턴이 달라 CSRF 토큰 검사를 끄는 경우가 많다.
- *    운영에서는 SameSite 쿠키, CSRF 토큰, 또는 stateless JWT 등으로 다시 검토해야 한다.
+ * Q. 로그인 없이 /api/auth/me 가 403이던 이유?
+ * A. Spring Security 기본은 미인증도 AccessDenied로 403을 준다.
+ *    REST에서는 미인증=401, 권한 없음=403으로 나눈다.
  *
  * Q. PasswordEncoder(BCrypt)?
  * A. 평문을 DB에 저장하지 않고 one-way 해시로 저장·비교한다.
@@ -47,7 +56,7 @@ public class SecurityConfig {
     //    loginId
     //    → AccountRepository.findByLoginId()
     //    → Account의 BCrypt 암호문·역할을 UserDetails로 변환
-    //    → MEMBER / PROFESSIONAL 권한 생성
+    //    → MEMBER / PROFESSIONAL / ADMIN 권한 생성
     @Bean
     public  AuthenticationManager authenticationManager(
             AuthenticationConfiguration configuration
@@ -64,11 +73,13 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 // WebConfig(CorsRegistry)에 등록한 CORS 정책을 Security 필터에도 적용
                 .cors(Customizer.withDefaults())
+                // region [핵심로직] URL별 인증·권한
                 .authorizeHttpRequests(auth -> auth
                         // 인증 없이 접근 허용 — 가입·로그인·H2 콘솔(로컬 DB 확인)
                         .requestMatchers(
                                 "/api/auth/signup",
                                 "/api/auth/login",
+                                "/api/auth/logout",
                                 "/h2-console/**"
                         ).permitAll()
                         // 현재 로그인 사용자 조회 — 세션이 있어야 함
@@ -78,6 +89,8 @@ public class SecurityConfig {
                                 HttpMethod.POST,
                                 "/api/members/*/feedback"
                         ).hasRole("PROFESSIONAL")
+                        // 관리자만 전문직 승인/해제. /api/** permitAll 보다 앞에 둔다
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         // 건강·회원 데이터는 로그인 필수. 본인 소유권은 Service에서 검증
                         .requestMatchers("/api/members/**").authenticated()
                         // AI 시연 등 나머지 /api/** 는 로컬 학습용으로 열어 둠
@@ -85,10 +98,36 @@ public class SecurityConfig {
                         // 위에 매칭되지 않은 경로는 인증 필요
                         .anyRequest().authenticated()
                 )
+                // endregion
                 // H2 콘솔은 iframe을 사용하므로 같은 출처의 frame 접근을 허용합니다.
-                .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()));
+                .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
+                // region [하드코딩] 미인증 401 / 권한없음 403
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, authException) ->
+                                writeAuthError(response, HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.")
+                        )
+                        .accessDeniedHandler((request, response, accessDeniedException) ->
+                                writeAuthError(response, HttpStatus.FORBIDDEN, "접근 권한이 없습니다.")
+                        )
+                );
+                // endregion
 
         return http.build();
+    }
+
+    private static void writeAuthError(
+            HttpServletResponse response,
+            HttpStatus status,
+            String message
+    ) throws IOException {
+        response.setStatus(status.value());
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+        response.getWriter().write(
+                "{\"timestamp\":\"" + LocalDateTime.now()
+                        + "\",\"status\":" + status.value()
+                        + ",\"message\":\"" + message + "\"}"
+        );
     }
 
 
