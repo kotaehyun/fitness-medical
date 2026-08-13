@@ -9,10 +9,11 @@ FastAPI + MongoDB + Chroma + 로컬 Ollama 기반 RAG입니다.
 
 ```text
 Spring Boot (회원·건강 기록, MySQL)
-  → FastAPI (이 서비스)
+  → FastAPI /ask
+      Router(질문 분류) → Retriever(Chroma) → Writer(Ollama) → Guard(답변 점검)
     → MongoDB (원문 Document / Chunk 정본)
     → Chroma (Chunk 임베딩 검색)
-    → Ollama (검색 근거로 문장 생성)
+    → Ollama (검색 근거로 문장 생성, 기본 gemma4)
 ```
 
 ## 현재 구현
@@ -23,10 +24,12 @@ Spring Boot (회원·건강 기록, MySQL)
 - `POST /search` 비슷한 Chunk 검색 (`query`, `n_results`)
 - `POST /ask` 검색 근거로 답변 생성 (`answer` + `sources`)
 - 질문/답변 가드레일: 진단·처방·약 용량 요청·단정 문장 차단 (`model: guardrail`)
+- Retriever 거리 필터: cosine `distance`가 0.55보다 큰 Chunk는 Writer에 넣지 않음
 - `GET /health` Mongo / Chroma / Ollama 연결 상태
 
 근거 Chunk가 없으면 LLM을 호출하지 않고 안내 문구만 반환합니다.
 진단·처방 성격의 질문은 검색·LLM 전에 거절합니다.
+모델 학습/파인튜닝은 포함하지 않습니다. 로컬 Ollama를 그대로 사용합니다.
 
 ## 실행 전 준비
 
