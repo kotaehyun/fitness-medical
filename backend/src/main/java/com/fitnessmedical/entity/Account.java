@@ -28,6 +28,10 @@ import jakarta.persistence.*;
                 @UniqueConstraint(
                         name = "uk_accounts_login_id",
                         columnNames = "login_id"
+                ),
+                @UniqueConstraint(
+                        name = "uk_accounts_license_number",
+                        columnNames = "license_number"
                 )
         }
 )
@@ -57,7 +61,7 @@ public class Account {
     @Column(name = "professional_type", length = 20)
     private ProfessionalType professionalType;
 
-    // 전문의 면허 또는 트레이너 자격번호 — 로깅·응답 금지
+    // 전문의 면허 또는 트레이너 자격번호 — 로깅·응답 금지. UNIQUE(NULL은 여러 행 허용)
     @Column(name = "license_number", length = 20)
     private String licenseNumber;
 

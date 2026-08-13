@@ -25,8 +25,8 @@ class MemberAuthorizationServiceTest {
             new MemberAuthorizationService(accountRepository);
 
     @Test
-    @DisplayName("PROFESSIONAL은 모든 memberId에 접근할 수 있다.")
-    void professional_canAccessAnyMember() {
+    @DisplayName("인증된 PROFESSIONAL은 모든 memberId에 접근할 수 있다.")
+    void verifiedProfessional_canAccessAnyMember() {
         Account professional = new Account(
                 "pro01",
                 "encoded",
@@ -68,8 +68,8 @@ class MemberAuthorizationServiceTest {
     }
 
     @Test
-    @DisplayName("자격 없는 트레이너도 전문가 API를 쓸 수 있다.")
-    void unverifiedTrainer_canActAsProfessional() {
+    @DisplayName("미인증 트레이너는 전문가 API를 쓸 수 없다.")
+    void unverifiedTrainer_isForbidden() {
         Account trainer = new Account(
                 "trainer02",
                 "encoded",
@@ -82,7 +82,12 @@ class MemberAuthorizationServiceTest {
         );
         given(accountRepository.findByLoginId("trainer02")).willReturn(Optional.of(trainer));
 
-        assertThat(authorizationService.requireProfessional("trainer02")).isSameAs(trainer);
+        assertThatThrownBy(() -> authorizationService.requireProfessional("trainer02"))
+                .isInstanceOf(ForbiddenException.class)
+                .hasMessage("전문직 인증이 완료되지 않았습니다.");
+        assertThatThrownBy(() -> authorizationService.assertCanAccessMember("trainer02", 1L))
+                .isInstanceOf(ForbiddenException.class)
+                .hasMessage("전문직 인증이 완료되지 않았습니다.");
     }
 
     @Test
@@ -101,6 +106,9 @@ class MemberAuthorizationServiceTest {
         given(accountRepository.findByLoginId("doctor02")).willReturn(Optional.of(physician));
 
         assertThatThrownBy(() -> authorizationService.requireProfessional("doctor02"))
+                .isInstanceOf(ForbiddenException.class)
+                .hasMessage("전문직 인증이 완료되지 않았습니다.");
+        assertThatThrownBy(() -> authorizationService.assertCanAccessMember("doctor02", 1L))
                 .isInstanceOf(ForbiddenException.class)
                 .hasMessage("전문직 인증이 완료되지 않았습니다.");
     }

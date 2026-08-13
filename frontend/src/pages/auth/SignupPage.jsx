@@ -2,10 +2,9 @@
  * [공부/면접] 회원가입 (SignupPage.jsx)
  *
  * Q. 회원 vs 전문가 가입 차이는?
- * A. MEMBER는 프로필로 Member+Account를 같이 만든다.
- *    PROFESSIONAL은 memberId 없이 가입한다.
- *    트레이너 → 생활스포츠지도사 자격번호는 우대(선택),
- *    전문의 → 면허번호 필수(학습용 형식 인증).
+ * A. MEMBER는 프로필로 새 Member+Account를 같이 만든다. 기존 memberId는 받지 않는다.
+ *    PROFESSIONAL은 memberId 없이 가입하고, 형식만 맞으면 저장한다.
+ *    공개 가입 전문가는 verified=false. 로컬 데모 trainer01/doctor01만 즉시 사용 가능.
  *
  * Q. 면허번호를 프론트만 검사하면 되나?
  * A. 안 된다. 서버 AccountService에서 다시 검증한다. 프론트 검사는 UX용.
@@ -102,9 +101,9 @@ export function SignupPage() {
             가입 규칙을 적용합니다.
           </h1>
           <p>
-            트레이너는 생활스포츠지도사 자격번호,
+            공개 전문가 가입은 관리자 승인 전까지
             <br />
-            전문의는 면허번호로 학습용 전문직 인증을 합니다.
+            회원 데이터에 접근할 수 없습니다.
           </p>
         </div>
         <div className="login-quote">자격·면허 인증은 형식 확인이며 의료 진단·처방 권한이 아닙니다.</div>
@@ -281,8 +280,8 @@ export function SignupPage() {
                 </div>
                 <small className="signup-hint">
                   {professionalType === 'PHYSICIAN'
-                    ? '학습용 형식 인증입니다. 실제 면허 조회가 아니며 진단·처방 권한을 주지 않습니다.'
-                    : '선택(우대). 영문 2자 + 숫자 6~12자. 실제 국가자격 조회가 아닙니다.'}
+                    ? '학습용 형식 확인입니다. 가입 후 관리자 승인 전까지 전문가 API는 사용할 수 없습니다.'
+                    : '선택(우대). 영문 2자 + 숫자 6~12자. 가입 직후는 미인증입니다.'}
                 </small>
               </label>
             ) : null}

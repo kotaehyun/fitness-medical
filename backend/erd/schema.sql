@@ -21,10 +21,11 @@ CREATE TABLE accounts (
     display_name VARCHAR(30) NOT NULL,
     role VARCHAR(20) NOT NULL,
     professional_type VARCHAR(20) NULL,
-    license_number VARCHAR(20) NULL, -- 전문의 면허 또는 트레이너 자격번호
+    license_number VARCHAR(20) NULL, -- 전문의 면허 또는 트레이너 자격번호. UNIQUE(NULL 여러 행 허용)
     professional_verified BOOLEAN NOT NULL DEFAULT FALSE,
     member_id BIGINT NULL,
     CONSTRAINT uk_accounts_login_id UNIQUE (login_id),
+    CONSTRAINT uk_accounts_license_number UNIQUE (license_number),
     CONSTRAINT uk_accounts_member_id UNIQUE (member_id),
     CONSTRAINT fk_accounts_member
         FOREIGN KEY (member_id) REFERENCES members(id)

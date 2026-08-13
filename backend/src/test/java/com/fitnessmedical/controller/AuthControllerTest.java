@@ -18,9 +18,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fitnessmedical.service.AccountService;
-import com.fitnessmedical.common.DuplicateResourceException;
 import com.fitnessmedical.common.InvalidRequestException;
-import com.fitnessmedical.common.ResourceNotFoundException;
 import com.fitnessmedical.dto.account.AccountCreateRequest;
 
 /**
@@ -130,17 +128,17 @@ class AuthControllerTest {
     }
 
     /**
-     * [케이스] MEMBER + memberId 없음 → 400
+     * [케이스] MEMBER + 프로필 없음 → 400
      *
      * Bean Validation이 아니라 Service 업무 규칙이다.
      * mock이 InvalidRequestException을 던지면 GlobalExceptionHandler가 400으로 매핑한다.
      */
     @Test
     @SuppressWarnings("null")
-    @DisplayName("MEMBER 계정에 memberId가 없으면 회원가입은 400을 반환한다.")
-    void signup_memberWithoutMemberId_returns400() throws Exception {
+    @DisplayName("MEMBER 계정에 프로필이 없으면 회원가입은 400을 반환한다.")
+    void signup_memberWithoutProfile_returns400() throws Exception {
         given(accountService.create(any(AccountCreateRequest.class)))
-                .willThrow(new InvalidRequestException("MEMBER 계정은 회원 연결이 필요합니다."));
+                .willThrow(new InvalidRequestException("MEMBER 계정은 프로필(성별·나이·키·체중·목표)이 필요합니다."));
 
         String json = """
                 {
@@ -156,40 +154,15 @@ class AuthControllerTest {
                         .content(json))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.message").value("MEMBER 계정은 회원 연결이 필요합니다."));
+                .andExpect(jsonPath("$.message").value("MEMBER 계정은 프로필(성별·나이·키·체중·목표)이 필요합니다."));
     }
 
     @Test
     @SuppressWarnings("null")
-    @DisplayName("존재하지 않는 memberId면 회원가입은 404를 반환한다.")
-    void signup_unknownMemberId_returns404() throws Exception {
+    @DisplayName("공개 가입에 memberId가 있으면 회원가입은 400을 반환한다.")
+    void signup_publicMemberId_returns400() throws Exception {
         given(accountService.create(any(AccountCreateRequest.class)))
-                .willThrow(new ResourceNotFoundException("연결할 회원을 찾을 수 없습니다."));
-
-        String json = """
-                {
-                    "loginId": "member01",
-                    "password": "password123",
-                    "displayName": "회원",
-                    "role": "MEMBER",
-                    "memberId": 999
-                }
-                """;
-
-        mockMvc.perform(post("/api/auth/signup")
-                        .contentType(APPLICATION_JSON)
-                        .content(json))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.status").value(404))
-                .andExpect(jsonPath("$.message").value("연결할 회원을 찾을 수 없습니다."));
-    }
-
-    @Test
-    @SuppressWarnings("null")
-    @DisplayName("이미 연결된 memberId면 회원가입은 409를 반환한다.")
-    void signup_alreadyLinkedMemberId_returns409() throws Exception {
-        given(accountService.create(any(AccountCreateRequest.class)))
-                .willThrow(new DuplicateResourceException("이미 연결된 회원입니다."));
+                .willThrow(new InvalidRequestException("공개 가입에서는 기존 회원을 연결할 수 없습니다."));
 
         String json = """
                 {
@@ -204,9 +177,9 @@ class AuthControllerTest {
         mockMvc.perform(post("/api/auth/signup")
                         .contentType(APPLICATION_JSON)
                         .content(json))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.status").value(409))
-                .andExpect(jsonPath("$.message").value("이미 연결된 회원입니다."));
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message").value("공개 가입에서는 기존 회원을 연결할 수 없습니다."));
     }
 
     @Test
@@ -221,8 +194,7 @@ class AuthControllerTest {
                     "loginId": "member01",
                     "password": "password123",
                     "displayName": "회원",
-                    "role": "MEMBER",
-                    "memberId": 1
+                    "role": "MEMBER"
                 }
                 """;
 
@@ -255,11 +227,11 @@ class AuthControllerTest {
 
     @Test
     @SuppressWarnings("null")
-    @DisplayName("PROFESSIONAL 계정에 memberId가 있으면 회원가입은 400을 반환한다.")
+    @DisplayName("PROFESSIONAL 공개 가입에 memberId가 있으면 회원가입은 400을 반환한다.")
     void signup_professionalWithMemberId_returns400() throws Exception {
         given(accountService.create(any(AccountCreateRequest.class)))
                 .willThrow(new InvalidRequestException(
-                        "PROFESSIONAL 계정은 memberId를 가질 수 없습니다."
+                        "공개 가입에서는 기존 회원을 연결할 수 없습니다."
                 ));
 
         String json = """
@@ -278,6 +250,6 @@ class AuthControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.message")
-                        .value("PROFESSIONAL 계정은 memberId를 가질 수 없습니다."));
+                        .value("공개 가입에서는 기존 회원을 연결할 수 없습니다."));
     }
 }

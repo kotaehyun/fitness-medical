@@ -8,7 +8,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 import java.time.LocalDate;
-import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -18,9 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import com.fitnessmedical.entity.Account;
 import com.fitnessmedical.entity.Member;
 import com.fitnessmedical.entity.MemberStatus;
-import com.fitnessmedical.common.DuplicateResourceException;
 import com.fitnessmedical.common.InvalidRequestException;
-import com.fitnessmedical.common.ResourceNotFoundException;
 import com.fitnessmedical.dto.account.AccountCreateRequest;
 import com.fitnessmedical.entity.AccountRole;
 import com.fitnessmedical.entity.ProfessionalType;
@@ -57,26 +54,25 @@ class AccountServiceTest {
     );
 
     @Test
-    @DisplayName("MEMBER 계정은 회원 연결이나 프로필이 없으면 생성할 수 없다.")
-    void create_memberWithoutMemberIdOrProfile_throwsInvalidRequestException() {
+    @DisplayName("MEMBER 계정은 프로필이 없으면 생성할 수 없다.")
+    void create_memberWithoutProfile_throwsInvalidRequestException() {
         AccountCreateRequest request = memberRequest(null);
 
         assertThatThrownBy(() -> accountService.create(request))
                 .isInstanceOf(InvalidRequestException.class)
-                .hasMessage("MEMBER 계정은 회원 연결 또는 프로필(성별·나이·키·체중·목표)이 필요합니다.");
+                .hasMessage("MEMBER 계정은 프로필(성별·나이·키·체중·목표)이 필요합니다.");
     }
 
     @Test
     @SuppressWarnings("null")
-    @DisplayName("MEMBER 계정은 회원 연결이 있으면 생성할 수 있다.")
-    void create_memberWithMemberId_createsAccount() {
-        Member member = sampleMember();
-        AccountCreateRequest request = memberRequest(1L);
+    @DisplayName("MEMBER 계정은 프로필로 새 회원을 만들어 가입한다.")
+    void create_memberWithProfile_createsNewMember() {
+        Member created = sampleMember();
+        AccountCreateRequest request = memberProfileRequest();
 
         given(accountRepository.existsByLoginId("member01")).willReturn(false);
         given(passwordEncoder.encode("password123")).willReturn("encoded-password");
-        given(memberRepository.findById(1L)).willReturn(Optional.of(member));
-        given(accountRepository.existsByMember_Id(1L)).willReturn(false);
+        given(memberRepository.save(any(Member.class))).willReturn(created);
         given(accountRepository.save(any(Account.class)))
                 .willAnswer(invocation -> invocation.getArgument(0));
 
@@ -86,39 +82,23 @@ class AccountServiceTest {
         verify(accountRepository).save(captor.capture());
 
         Account savedAccount = captor.getValue();
-        assertThat(savedAccount.getMember()).isSameAs(member);
+        assertThat(savedAccount.getMember()).isSameAs(created);
         assertThat(savedAccount.getRole()).isEqualTo(AccountRole.MEMBER);
         assertThat(savedAccount.isProfessionalVerified()).isFalse();
     }
 
     @Test
-    @DisplayName("존재하지 않는 memberId는 연결할 수 없다.")
-    void create_memberWithUnknownMemberId_throwsResourceNotFoundException() {
-        AccountCreateRequest request = memberRequest(999L);
-
-        given(memberRepository.findById(999L)).willReturn(Optional.empty());
-
-        assertThatThrownBy(() -> accountService.create(request))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessage("연결할 회원을 찾을 수 없습니다.");
-    }
-
-    @Test
-    @DisplayName("이미 연결된 memberId는 다시 연결할 수 없다.")
-    void create_memberWithAlreadyLinkedMemberId_throwsDuplicateResourceException() {
-        Member member = sampleMember();
+    @DisplayName("공개 가입은 기존 memberId를 연결할 수 없다.")
+    void create_memberWithMemberId_throwsInvalidRequestException() {
         AccountCreateRequest request = memberRequest(1L);
 
-        given(memberRepository.findById(1L)).willReturn(Optional.of(member));
-        given(accountRepository.existsByMember_Id(1L)).willReturn(true);
-
         assertThatThrownBy(() -> accountService.create(request))
-            .isInstanceOf(DuplicateResourceException.class)
-            .hasMessage("이미 연결된 회원입니다.");
+                .isInstanceOf(InvalidRequestException.class)
+                .hasMessage("공개 가입에서는 기존 회원을 연결할 수 없습니다.");
     }
 
     @Test
-    @DisplayName("PROFESSIONAL 계정은 memberId를 가질 수 없다.")
+    @DisplayName("PROFESSIONAL 공개 가입도 memberId를 가질 수 없다.")
     void create_professionalWithMemberId_throwsInvalidRequestException() {
         AccountCreateRequest request = new AccountCreateRequest(
                 "pro01",
@@ -138,7 +118,7 @@ class AccountServiceTest {
 
         assertThatThrownBy(() -> accountService.create(request))
                 .isInstanceOf(InvalidRequestException.class)
-                .hasMessage("PROFESSIONAL 계정은 memberId를 가질 수 없습니다.");
+                .hasMessage("공개 가입에서는 기존 회원을 연결할 수 없습니다.");
     }
 
     @Test
@@ -201,8 +181,8 @@ class AccountServiceTest {
 
     @Test
     @SuppressWarnings("null")
-    @DisplayName("트레이너는 자격번호 형식이 맞으면 전문직 인증이 완료된다.")
-    void create_trainerWithValidCertificate_isVerified() {
+    @DisplayName("트레이너는 자격번호 형식이 맞아도 공개 가입은 미인증이다.")
+    void create_trainerWithValidCertificate_isUnverified() {
         AccountCreateRequest request = new AccountCreateRequest(
                 "trainer01",
                 "password123",
@@ -232,7 +212,7 @@ class AccountServiceTest {
         Account saved = captor.getValue();
         assertThat(saved.getProfessionalType()).isEqualTo(ProfessionalType.TRAINER);
         assertThat(saved.getLicenseNumber()).isEqualTo("SP21001234");
-        assertThat(saved.isProfessionalVerified()).isTrue();
+        assertThat(saved.isProfessionalVerified()).isFalse();
     }
 
     @Test
@@ -285,8 +265,8 @@ class AccountServiceTest {
 
     @Test
     @SuppressWarnings("null")
-    @DisplayName("전문의는 면허번호 형식이 맞으면 전문직 인증이 완료된다.")
-    void create_physicianWithValidLicense_isVerified() {
+    @DisplayName("전문의는 면허번호 형식이 맞아도 공개 가입은 미인증이다.")
+    void create_physicianWithValidLicense_isUnverified() {
         AccountCreateRequest request = new AccountCreateRequest(
                 "doctor01",
                 "password123",
@@ -315,7 +295,7 @@ class AccountServiceTest {
         Account saved = captor.getValue();
         assertThat(saved.getProfessionalType()).isEqualTo(ProfessionalType.PHYSICIAN);
         assertThat(saved.getLicenseNumber()).isEqualTo("123456");
-        assertThat(saved.isProfessionalVerified()).isTrue();
+        assertThat(saved.isProfessionalVerified()).isFalse();
     }
 
     private AccountCreateRequest memberRequest(Long memberId) {
@@ -333,6 +313,24 @@ class AccountServiceTest {
                 null,
                 null,
                 null
+        );
+    }
+
+    private AccountCreateRequest memberProfileRequest() {
+        return new AccountCreateRequest(
+                "member01",
+                "password123",
+                "회원",
+                AccountRole.MEMBER,
+                null,
+                null,
+                null,
+                "Male",
+                35,
+                175.5,
+                72.3,
+                "건강 습관 만들기",
+                10
         );
     }
 

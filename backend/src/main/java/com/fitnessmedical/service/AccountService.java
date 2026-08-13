@@ -11,7 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.fitnessmedical.common.DuplicateResourceException;
 import com.fitnessmedical.common.InvalidCredentialsException;
 import com.fitnessmedical.common.InvalidRequestException;
-import com.fitnessmedical.common.ResourceNotFoundException;
 import com.fitnessmedical.dto.account.AccountCreateRequest;
 import com.fitnessmedical.dto.account.AccountLoginRequest;
 import com.fitnessmedical.dto.account.AccountResponse;
@@ -36,7 +35,7 @@ import com.fitnessmedical.repository.MemberRepository;
  *    메서드 단위 @Transactional로 덮어씁니다.
  *
  * Q. 이 Service에서 던지는 예외와 HTTP 상태 코드는?
- * A. InvalidRequestException → 400, ResourceNotFoundException → 404,
+ * A. InvalidRequestException → 400,
  *    DuplicateResourceException → 409, InvalidCredentialsException → 401
  *    (GlobalExceptionHandler가 매핑합니다.)
  *
@@ -111,8 +110,9 @@ public class AccountService {
      *
      * - MEMBER → professionalType/자격·면허번호 금지
      * - PROFESSIONAL → professionalType 필수
-     * - TRAINER → 생활스포츠지도사 자격번호는 우대(선택). 없으면 verified=false, 있으면 형식 검사
-     * - PHYSICIAN → 면허번호(숫자 5~10자리) 필수, 형식 통과 시 verified=true
+     * - TRAINER → 생활스포츠지도사 자격번호는 우대(선택). 없으면 저장만, 있으면 형식 검사
+     * - PHYSICIAN → 면허번호(숫자 5~10자리) 필수, 형식만 검사
+     * - 공개 가입은 형식이 맞아도 verified=false. 관리자 승인(시드 계정) 전까지 전문가 API 불가
      */
     private ProfessionalCredentials resolveProfessionalCredentials(AccountCreateRequest request) {
         // region [하드코딩] 전문직 유형·자격/면허 규칙
@@ -142,7 +142,7 @@ public class AccountService {
                 throw new InvalidRequestException("생활스포츠지도사 자격번호 형식이 올바르지 않습니다.");
             }
             ensureUniqueCredential(license);
-            return new ProfessionalCredentials(ProfessionalType.TRAINER, license.toUpperCase(), true);
+            return new ProfessionalCredentials(ProfessionalType.TRAINER, license.toUpperCase(), false);
         }
 
         if (license == null) {
@@ -152,7 +152,7 @@ public class AccountService {
             throw new InvalidRequestException("전문의 면허번호 형식이 올바르지 않습니다.");
         }
         ensureUniqueCredential(license);
-        return new ProfessionalCredentials(ProfessionalType.PHYSICIAN, license, true);
+        return new ProfessionalCredentials(ProfessionalType.PHYSICIAN, license, false);
         // endregion
     }
 
@@ -166,39 +166,21 @@ public class AccountService {
     }
 
     /**
-     * [공부/면접] 역할(AccountRole)에 따라 Member Entity를 연결하거나 생성합니다.
+     * [공부/면접] 공개 가입의 Member 연결 규칙
      *
-     * 규칙:
-     * - MEMBER + memberId → 기존 회원 연결
-     * - MEMBER + memberId 없음 → 프로필로 Member 생성 후 연결
-     * - PROFESSIONAL → memberId 금지
+     * - memberId가 오면 거절한다. 공개 API로 기존 회원을 가로채면 안 된다.
+     * - MEMBER → 프로필로 새 Member를 만든다.
+     * - PROFESSIONAL → Member를 연결하지 않는다.
+     * - 기존 회원 연결은 관리자·초대 API(미구현)에서만 한다.
      */
     private Member resolveMember(AccountCreateRequest request) {
         // region [하드코딩] MEMBER/PROFESSIONAL 회원 연결 규칙
-        Long memberId = request.memberId();
-
-        if (request.role() == AccountRole.PROFESSIONAL && memberId != null) {
-            throw new InvalidRequestException(
-                        "PROFESSIONAL 계정은 memberId를 가질 수 없습니다."
-            );
-        }
-
-        if (request.role() == AccountRole.MEMBER && memberId == null) {
-            return createMemberProfile(request);
+        if (request.memberId() != null) {
+            throw new InvalidRequestException("공개 가입에서는 기존 회원을 연결할 수 없습니다.");
         }
 
         if (request.role() == AccountRole.MEMBER) {
-            Member member = memberRepository.findById(memberId)
-                    .orElseThrow(() -> new ResourceNotFoundException(
-                            "연결할 회원을 찾을 수 없습니다."
-                    ));
-
-            if (accountRepository.existsByMember_Id(memberId)) {
-                throw new DuplicateResourceException(
-                        "이미 연결된 회원입니다."
-                );
-            }
-            return member;
+            return createMemberProfile(request);
         }
 
         return null;
@@ -210,7 +192,7 @@ public class AccountService {
         if (isBlank(request.gender()) || request.age() == null
                 || request.height() == null || request.weight() == null
                 || isBlank(request.goal())) {
-            throw new InvalidRequestException("MEMBER 계정은 회원 연결 또는 프로필(성별·나이·키·체중·목표)이 필요합니다.");
+            throw new InvalidRequestException("MEMBER 계정은 프로필(성별·나이·키·체중·목표)이 필요합니다.");
         }
 
         int progress = request.progress() == null ? 0 : request.progress();

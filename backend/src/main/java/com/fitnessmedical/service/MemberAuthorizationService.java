@@ -8,7 +8,6 @@ import com.fitnessmedical.common.InvalidCredentialsException;
 import com.fitnessmedical.entity.Account;
 import com.fitnessmedical.entity.AccountRole;
 import com.fitnessmedical.entity.Member;
-import com.fitnessmedical.entity.ProfessionalType;
 import com.fitnessmedical.repository.AccountRepository;
 
 /**
@@ -22,8 +21,8 @@ import com.fitnessmedical.repository.AccountRepository;
  * A. UserDetails에는 username(loginId)·role만 있다. memberId·displayName은 Account에 있다.
  *
  * Q. professionalVerified를 여기서 막으면?
- * A. 전문의는 면허 인증이 필수라서 verified=false면 403.
- *    트레이너 자격은 우대라서 verified=false여도 PROFESSIONAL이면 피드백·회원 CRUD 가능.
+ * A. 역할이 PROFESSIONAL이어도 공개 가입은 verified=false다.
+ *    관리자 승인(시드 계정) 전에는 회원 조회·피드백을 막는다.
  */
 @Service
 @Transactional(readOnly = true)
@@ -51,10 +50,7 @@ public class MemberAuthorizationService {
         if (account.getRole() != AccountRole.PROFESSIONAL) {
             throw new ForbiddenException("전문가 권한이 필요합니다.");
         }
-        boolean unverifiedTrainer = account.getProfessionalType() == ProfessionalType.TRAINER;
-        if (!account.isProfessionalVerified() && !unverifiedTrainer) {
-            throw new ForbiddenException("전문직 인증이 완료되지 않았습니다.");
-        }
+        assertProfessionalVerified(account);
         return account;
         // endregion
     }
@@ -63,6 +59,7 @@ public class MemberAuthorizationService {
         // region [하드코딩] MEMBER 소유권 / PROFESSIONAL 전체 접근
         Account account = requireAccount(loginId);
         if (account.getRole() == AccountRole.PROFESSIONAL) {
+            assertProfessionalVerified(account);
             return;
         }
         if (account.getRole() != AccountRole.MEMBER) {
@@ -73,5 +70,11 @@ public class MemberAuthorizationService {
             throw new ForbiddenException("해당 회원 데이터에 접근할 수 없습니다.");
         }
         // endregion
+    }
+
+    private void assertProfessionalVerified(Account account) {
+        if (!account.isProfessionalVerified()) {
+            throw new ForbiddenException("전문직 인증이 완료되지 않았습니다.");
+        }
     }
 }
