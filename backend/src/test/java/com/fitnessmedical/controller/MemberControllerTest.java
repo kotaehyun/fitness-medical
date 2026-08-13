@@ -14,10 +14,13 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import org.springframework.security.test.context.support.WithMockUser;
+
 import com.fitnessmedical.dto.member.MemberCreateRequest;
 import com.fitnessmedical.dto.member.MemberResponse;
 import com.fitnessmedical.service.FeedbackService;
 import com.fitnessmedical.service.HealthRecordService;
+import com.fitnessmedical.service.MemberAuthorizationService;
 import com.fitnessmedical.service.MemberService;
 
 /**
@@ -32,7 +35,7 @@ import com.fitnessmedical.service.MemberService;
  */
 @WebMvcTest(MemberController.class)
 @AutoConfigureMockMvc(addFilters = false)
-@MockitoBean(types = {HealthRecordService.class, FeedbackService.class})
+@MockitoBean(types = {HealthRecordService.class, FeedbackService.class, MemberAuthorizationService.class})
 class MemberControllerTest {
 
     @Autowired
@@ -77,6 +80,7 @@ class MemberControllerTest {
      */
     @Test
     @SuppressWarnings("null")
+    @WithMockUser(username = "pro01", roles = "PROFESSIONAL")
     @DisplayName("정상 회원 등록 요청은 201과 회원 정보를 반환한다.")
     void createMember_validRequest_returns201() throws Exception {
         MemberResponse response = new MemberResponse(

@@ -20,8 +20,8 @@ import org.springframework.security.config.Customizer;
  *    authorizeHttpRequests로 URL·HTTP 메서드별 인증/권한을 정의한다.
  *
  * Q. permitAll() vs authenticated() vs hasRole()?
- * A. permitAll — 누구나 접근(회원가입·로그인 API, 학습용 /api/**).
- *    authenticated — 로그인 세션/토큰 필요(/api/auth/me).
+ * A. permitAll — 누구나 접근(회원가입·로그인 API).
+ *    authenticated — 로그인 세션 필요(/api/auth/me, /api/members/**).
  *    hasRole("PROFESSIONAL") — ROLE_PROFESSIONAL 권한 필요(피드백 작성 POST).
  *
  * Q. csrf.disable()을 쓰는 이유와 주의?
@@ -78,7 +78,9 @@ public class SecurityConfig {
                                 HttpMethod.POST,
                                 "/api/members/*/feedback"
                         ).hasRole("PROFESSIONAL")
-                        // 학습 단계: 나머지 /api/** 는 로그인 없이 허용 (데모·프론트 연동 편의)
+                        // 건강·회원 데이터는 로그인 필수. 본인 소유권은 Service에서 검증
+                        .requestMatchers("/api/members/**").authenticated()
+                        // AI 시연 등 나머지 /api/** 는 로컬 학습용으로 열어 둠
                         .requestMatchers("/api/**").permitAll()
                         // 위에 매칭되지 않은 경로는 인증 필요
                         .anyRequest().authenticated()

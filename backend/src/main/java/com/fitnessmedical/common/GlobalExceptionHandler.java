@@ -25,8 +25,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
  *
  * Q. 예외 → HTTP 매핑 요약?
  * A. ResourceNotFoundException → 404, DuplicateResourceException → 409,
- *    InvalidCredentialsException → 401, InvalidRequestException → 400,
- *    MethodArgumentNotValidException(@Valid) → 400.
+ *    InvalidCredentialsException → 401, ForbiddenException → 403,
+ *    InvalidRequestException → 400, MethodArgumentNotValidException(@Valid) → 400.
  *
  * 여러 Controller에서 발생하는 예외를 한 곳에서 처리합니다.
  * 같은 오류 응답 형식을 반복 작성하지 않기 위한 클래스입니다.
@@ -63,6 +63,19 @@ public class GlobalExceptionHandler {
                 .body(new ApiErrorResponse(
                         LocalDateTime.now(),
                         HttpStatus.UNAUTHORIZED.value(),
+                        exception.getMessage()
+                ));
+    }
+
+    // 권한·소유권 없음 → 403: 로그인은 됐지만 이 자원은 불가
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<ApiErrorResponse> handleForbidden(
+            ForbiddenException exception
+    ) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(new ApiErrorResponse(
+                        LocalDateTime.now(),
+                        HttpStatus.FORBIDDEN.value(),
                         exception.getMessage()
                 ));
     }

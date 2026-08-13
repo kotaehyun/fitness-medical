@@ -40,7 +40,9 @@ export const mockService = {
   async addFeedback(memberId, feedback) {
     await delay(450);
     const created = {
-      ...feedback,
+      author: feedback.author || '전문가',
+      role: feedback.role || '전문가',
+      content: feedback.content,
       id: `f${Date.now()}`,
       memberId,
       date: new Date().toISOString().slice(0, 10),

@@ -112,9 +112,10 @@ export const apiService = {
   },
 
   async addFeedback(memberId, feedback) {
+    // [면접] author·role은 서버가 세션 Account에서 채움. 클라이언트가 위조하지 않는다.
     const data = await request(`/members/${toApiId(memberId)}/feedback`, {
       method: 'POST',
-      body: JSON.stringify(feedback),
+      body: JSON.stringify({ content: feedback.content }),
     });
     return mapFeedback(data);
   },

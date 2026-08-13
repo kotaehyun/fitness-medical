@@ -2,6 +2,8 @@ package com.fitnessmedical.service;
 
 import com.fitnessmedical.dto.feedback.FeedbackRequest;
 import com.fitnessmedical.dto.feedback.FeedbackResponse;
+import com.fitnessmedical.entity.Account;
+import com.fitnessmedical.entity.AccountRole;
 import com.fitnessmedical.repository.FeedbackRepository;
 import com.fitnessmedical.entity.Feedback;
 import com.fitnessmedical.entity.Member;
@@ -19,6 +21,9 @@ import java.time.LocalDate;
  *
  * Q. writtenDate를 서버에서 LocalDate.now()로 넣는 이유는?
  * A. 클라이언트가 임의 날짜를 보내는 것을 막고, 등록 시점을 서버가 신뢰할 수 있게 합니다.
+ *
+ * Q. author·role을 요청 body에서 안 받는 이유는?
+ * A. 클라이언트가 아무 이름으로 위조할 수 있다. 세션 Account.displayName과 역할을 쓴다.
  *
  * 예외: ResourceNotFoundException(404) — getMember()에서 발생
  */
@@ -49,18 +54,25 @@ public class FeedbackService {
     /**
      * [공부/면접] 새 피드백을 등록합니다.
      *
-     * 흐름: getMember() → FeedbackRequest + LocalDate.now()로 Entity 생성
+     * 흐름: getMember() → 세션 Account + content + LocalDate.now()로 Entity 생성
      *       → save(INSERT) → FeedbackResponse 반환
      *
      * 면접 포인트: @Transactional(쓰기) — 조회·INSERT가 하나의 트랜잭션으로 처리됩니다.
      */
     @Transactional
-    public FeedbackResponse create(Long memberId, FeedbackRequest request ) {
+    public FeedbackResponse create(Long memberId, FeedbackRequest request, Account writer) {
 
         Member member = memberService.getMember(memberId);
+        String roleLabel = writer.getRole() == AccountRole.PROFESSIONAL
+                ? "전문가"
+                : writer.getRole().name();
 
         Feedback feedback = new Feedback(
-                member, request.author(), request.role(), LocalDate.now(), request.content()
+                member,
+                writer.getDisplayName(),
+                roleLabel,
+                LocalDate.now(),
+                request.content()
         );
 
         return FeedbackResponse.from(feedbackRepository.save(feedback));

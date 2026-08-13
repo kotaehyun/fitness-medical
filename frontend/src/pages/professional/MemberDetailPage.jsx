@@ -9,6 +9,9 @@
  *
  * Q. textarea placeholder·안내 문구?
  * A. 코칭 톤 유도, 진단·처방 오해 방지(Disclaimer와 동일 정책).
+ *
+ * Q. 피드백 author를 프론트에서 안 보내는 이유?
+ * A. 서버가 로그인 세션 displayName으로 채운다. body로 보내면 위조할 수 있다.
  */
 import {
   Activity,
@@ -40,11 +43,7 @@ export function MemberDetailPage() {
   const [feedbackSuccess, setFeedbackSuccess] = useState(false);
   const feedbackMutation = useMutation({
     mutationFn: ({ memberId, content }) =>
-      healthService.addFeedback(memberId, {
-        author: '홍길동',
-        role: '재활의학 전문가',
-        content,
-      }),
+      healthService.addFeedback(memberId, { content }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['feedback', id] });
       setFeedbackSuccess(true);

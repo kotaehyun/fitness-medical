@@ -7,7 +7,7 @@ import java.time.LocalDate;
  * [공부/면접] 전문가 피드백 JPA Entity
  *
  * <p><b>Q. FeedbackRequest DTO와 Entity 차이는?</b><br>
- * A. DTO는 author/role/content만 받고, memberId는 URL 경로, writtenDate는 서버가 생성.
+ * A. DTO는 content만 받는다. memberId는 URL, writtenDate·author·role은 서버(세션 Account).
  * Entity는 {@link Member} FK·PK·작성일 등 DB 영속 필드를 모두 보유합니다.</p>
  *
  * <p><b>Q. author·role을 String으로 두는 이유는?</b><br>
