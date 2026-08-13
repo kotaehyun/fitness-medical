@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -206,6 +207,50 @@ class AuthControllerTest {
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.status").value(409))
                 .andExpect(jsonPath("$.message").value("이미 연결된 회원입니다."));
+    }
+
+    @Test
+    @SuppressWarnings("null")
+    @DisplayName("UNIQUE 제약 레이스면 회원가입은 409를 반환한다.")
+    void signup_dataIntegrityViolation_returns409() throws Exception {
+        given(accountService.create(any(AccountCreateRequest.class)))
+                .willThrow(new DataIntegrityViolationException("uk_accounts_login_id"));
+
+        String json = """
+                {
+                    "loginId": "member01",
+                    "password": "password123",
+                    "displayName": "회원",
+                    "role": "MEMBER",
+                    "memberId": 1
+                }
+                """;
+
+        mockMvc.perform(post("/api/auth/signup")
+                        .contentType(APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value(409))
+                .andExpect(jsonPath("$.message").value("요청이 이미 처리되었거나 중복된 값입니다."));
+    }
+
+    @Test
+    @SuppressWarnings("null")
+    @DisplayName("로그인 아이디가 비어 있으면 400을 반환한다.")
+    void login_blankLoginId_returns400() throws Exception {
+        String json = """
+                {
+                    "loginId": "",
+                    "password": "password123"
+                }
+                """;
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message").value("로그인 아이디는 필수입니다."));
     }
 
     @Test

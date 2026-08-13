@@ -43,6 +43,9 @@ import com.fitnessmedical.repository.MemberRepository;
  * Q. 전문직 인증은 실제 조회인가?
  * A. 아니다. 학습용 형식 확인이다. 전문의 면허·생활스포츠지도사 자격번호를
  *    국가 시스템에 조회하지 않으며, 진단·처방 권한도 주지 않는다.
+ *
+ * Q. [하드코딩] region은?
+ * A. 직접 구현한 핵심 규칙을 IDE에서 접을 수 있게 표시한 학습용 구간이다.
  */
 @Service
 @Transactional(readOnly = true)
@@ -77,7 +80,8 @@ public class AccountService {
      */
     @Transactional
     public AccountResponse create(AccountCreateRequest request) {
-
+        // region [하드코딩] 회원가입 중복 검사·저장
+        // exists와 save 사이 레이스는 uk_accounts_login_id + DataIntegrityViolationException(409)이 막는다.
         if (accountRepository.existsByLoginId(request.loginId())) {
             throw new DuplicateResourceException("이미 사용 중인 로그인 아이디입니다.");
         }
@@ -99,6 +103,7 @@ public class AccountService {
 
         Account saved = accountRepository.save(account);
         return AccountResponse.from(saved);
+        // endregion
     }
 
     /**
@@ -110,6 +115,7 @@ public class AccountService {
      * - PHYSICIAN → 면허번호(숫자 5~10자리) 필수, 형식 통과 시 verified=true
      */
     private ProfessionalCredentials resolveProfessionalCredentials(AccountCreateRequest request) {
+        // region [하드코딩] 전문직 유형·자격/면허 규칙
         String license = blankToNull(request.licenseNumber());
 
         if (request.role() == AccountRole.MEMBER) {
@@ -147,13 +153,16 @@ public class AccountService {
         }
         ensureUniqueCredential(license);
         return new ProfessionalCredentials(ProfessionalType.PHYSICIAN, license, true);
+        // endregion
     }
 
     private void ensureUniqueCredential(String license) {
+        // region [하드코딩] 자격/면허번호 중복
         if (accountRepository.existsByLicenseNumber(license)
                 || accountRepository.existsByLicenseNumber(license.toUpperCase())) {
             throw new DuplicateResourceException("이미 등록된 자격/면허번호입니다.");
         }
+        // endregion
     }
 
     /**
@@ -165,7 +174,7 @@ public class AccountService {
      * - PROFESSIONAL → memberId 금지
      */
     private Member resolveMember(AccountCreateRequest request) {
-
+        // region [하드코딩] MEMBER/PROFESSIONAL 회원 연결 규칙
         Long memberId = request.memberId();
 
         if (request.role() == AccountRole.PROFESSIONAL && memberId != null) {
@@ -193,9 +202,11 @@ public class AccountService {
         }
 
         return null;
+        // endregion
     }
 
     private Member createMemberProfile(AccountCreateRequest request) {
+        // region [하드코딩] MEMBER 프로필로 Member 생성
         if (isBlank(request.gender()) || request.age() == null
                 || request.height() == null || request.weight() == null
                 || isBlank(request.goal())) {
@@ -215,6 +226,7 @@ public class AccountService {
                 null
         );
         return memberRepository.save(member);
+        // endregion
     }
 
     /**
@@ -230,6 +242,7 @@ public class AccountService {
      *             이 메서드는 Service 단독 검증 패턴 학습용으로 남아 있습니다.
      */
     public AccountResponse login(AccountLoginRequest request) {
+        // region [하드코딩] loginId·비밀번호 검증
         Account account = accountRepository
                 .findByLoginId(request.loginId())
                 .orElseThrow(() -> new InvalidCredentialsException(
@@ -244,6 +257,7 @@ public class AccountService {
             );
         }
         return AccountResponse.from(account);
+        // endregion
     }
 
     /**

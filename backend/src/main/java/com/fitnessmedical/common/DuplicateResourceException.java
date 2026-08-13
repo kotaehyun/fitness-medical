@@ -8,8 +8,8 @@ package com.fitnessmedical.common;
  *    400은 필드 형식 오류·비즈니스 규칙 위반(InvalidRequestException)에 가깝다.
  *
  * Q. DB unique constraint 위반과의 관계?
- * A. Service에서 save 전 findByLoginId()로 먼저 검사해 이 예외를 던진다.
- *    Handler가 409로 변환하므로 클라이언트는 "중복"임을 상태 코드만으로도 알 수 있다.
+ * A. Service에서 save 전 exists 검사로 이 예외를 던진다. exists와 save 사이 레이스는
+ *    UNIQUE가 DataIntegrityViolationException으로 막는다. Handler가 둘 다 409로 변환한다.
  *
  * Q. 왜 별도 예외 클래스?
  * A. IllegalStateException 등 범용 타입과 구분해 Handler에서 HTTP 상태·메시지를 정확히 매핑하기 위함.
