@@ -16,14 +16,14 @@ from chromadb.api.models.Collection import Collection
 
 from app.core.config import settings
 from app.schemas.document import AskResponse
-from app.services import llm
 from app.services.guardrail import (
     BLOCKED_ANSWER_FALLBACK,
     BLOCKED_QUERY_ANSWER,
     is_blocked_answer,
 )
 from app.services.intent_router import AskIntent, route_query
-from app.services.prompt import NO_SOURCE_ANSWER, SYSTEM_PROMPT, build_user_prompt
+from app.services.prompt import NO_SOURCE_ANSWER
+from app.services.writer import write_answer
 from app.services.retriever import Retriever
 
 
@@ -47,10 +47,8 @@ class AskService:
                 sources=[],
             )
 
-        answer = await llm.chat(
-            SYSTEM_PROMPT,
-            build_user_prompt(query, sources),
-        )
+        answer = await write_answer(query, sources)
+
         if is_blocked_answer(answer):
             return AskResponse(
                 answer=BLOCKED_ANSWER_FALLBACK,
