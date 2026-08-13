@@ -15,6 +15,7 @@ import com.fitnessmedical.common.InvalidCredentialsException;
 import com.fitnessmedical.entity.Account;
 import com.fitnessmedical.entity.AccountRole;
 import com.fitnessmedical.entity.Member;
+import com.fitnessmedical.entity.ProfessionalType;
 import com.fitnessmedical.repository.AccountRepository;
 
 class MemberAuthorizationServiceTest {
@@ -31,7 +32,10 @@ class MemberAuthorizationServiceTest {
                 "encoded",
                 "김전문가",
                 AccountRole.PROFESSIONAL,
-                null
+                null,
+                ProfessionalType.TRAINER,
+                null,
+                true
         );
         given(accountRepository.findByLoginId("pro01")).willReturn(Optional.of(professional));
 
@@ -61,6 +65,44 @@ class MemberAuthorizationServiceTest {
         assertThatThrownBy(() -> authorizationService.requireProfessional("member01"))
                 .isInstanceOf(ForbiddenException.class)
                 .hasMessage("전문가 권한이 필요합니다.");
+    }
+
+    @Test
+    @DisplayName("자격 없는 트레이너도 전문가 API를 쓸 수 있다.")
+    void unverifiedTrainer_canActAsProfessional() {
+        Account trainer = new Account(
+                "trainer02",
+                "encoded",
+                "미등록트레이너",
+                AccountRole.PROFESSIONAL,
+                null,
+                ProfessionalType.TRAINER,
+                null,
+                false
+        );
+        given(accountRepository.findByLoginId("trainer02")).willReturn(Optional.of(trainer));
+
+        assertThat(authorizationService.requireProfessional("trainer02")).isSameAs(trainer);
+    }
+
+    @Test
+    @DisplayName("면허 인증이 안 된 전문의는 거절한다.")
+    void unverifiedPhysician_isForbidden() {
+        Account physician = new Account(
+                "doctor02",
+                "encoded",
+                "미인증전문의",
+                AccountRole.PROFESSIONAL,
+                null,
+                ProfessionalType.PHYSICIAN,
+                null,
+                false
+        );
+        given(accountRepository.findByLoginId("doctor02")).willReturn(Optional.of(physician));
+
+        assertThatThrownBy(() -> authorizationService.requireProfessional("doctor02"))
+                .isInstanceOf(ForbiddenException.class)
+                .hasMessage("전문직 인증이 완료되지 않았습니다.");
     }
 
     @Test

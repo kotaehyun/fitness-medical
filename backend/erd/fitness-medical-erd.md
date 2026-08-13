@@ -25,6 +25,9 @@ erDiagram
         VARCHAR password "암호화된 비밀번호"
         VARCHAR display_name "표시 이름"
         VARCHAR role "MEMBER 또는 PROFESSIONAL"
+        VARCHAR professional_type "TRAINER 또는 PHYSICIAN"
+        VARCHAR license_number "전문의 면허 또는 트레이너 자격번호"
+        BOOLEAN professional_verified "전문직 인증 여부"
         BIGINT member_id FK_UK "연결 회원(없으면 null)"
     }
 

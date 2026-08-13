@@ -80,6 +80,14 @@ function mapAccount(account) {
 }
 
 export const apiService = {
+  async signup(payload) {
+    // [면접] password·면허번호는 요청 body로만 전송. console.log·에러 메시지에 포함 금지.
+    return mapAccount(await request('/auth/signup', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }));
+  },
+
   async login(loginId, password) {
     // [면접] password는 요청 body로만 전송. console.log·에러 메시지에 포함 금지.
     return mapAccount(await request('/auth/login', {

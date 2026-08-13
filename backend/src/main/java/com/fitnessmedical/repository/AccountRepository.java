@@ -31,4 +31,7 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
 
     // member_id FK 중복 검사 — MEMBER 역할 계정 1:1 제약
     boolean existsByMember_Id(Long memberId);
+
+    // 전문의 면허번호 중복 가입 방지
+    boolean existsByLicenseNumber(String licenseNumber);
 }

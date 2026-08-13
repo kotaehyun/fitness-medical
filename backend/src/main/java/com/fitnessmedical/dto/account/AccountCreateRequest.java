@@ -1,7 +1,12 @@
 package com.fitnessmedical.dto.account;
 
 import com.fitnessmedical.entity.AccountRole;
+import com.fitnessmedical.entity.ProfessionalType;
 
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -20,8 +25,9 @@ import jakarta.validation.constraints.Size;
  * JPA 연관관계(Member 객체) 대신 {@code memberId}(Long)만 전달합니다.</p>
  *
  * <p><b>Q. memberId와 role 규칙은?</b><br>
- * A. {@link AccountRole#MEMBER} → {@code memberId} 필수, {@link AccountRole#PROFESSIONAL} → null이어야 함.
- * {@code @Positive}는 양수일 때만 통과(null은 별도 Service 검증).</p>
+ * A. {@link AccountRole#MEMBER} → {@code memberId} 또는 회원 프로필(gender/age 등) 필요.
+ * {@link AccountRole#PROFESSIONAL} → {@code memberId} null, {@code professionalType} 필수.
+ * 전문의 {@code licenseNumber} 필수, 트레이너 자격번호는 우대(선택).</p>
  *
  * <p><b>Q. @NotBlank vs @NotNull?</b><br>
  * A. @NotBlank는 String 전용 — null, "", 공백만 있는 문자열 거부.
@@ -49,8 +55,31 @@ public record AccountCreateRequest(
         @NotNull(message = "계정 역할은 필수입니다.")
         AccountRole role,
 
-        // MEMBER일 때만 필수 — @Positive는 1 이상일 때만 통과, null·0·음수는 Service에서 role별 검증
+        // MEMBER일 때만 선택 — @Positive는 1 이상일 때만 통과, null은 Service에서 처리
         @Positive(message = "회원 ID는 양수여야 합니다.")
-        Long memberId
+        Long memberId,
+
+        ProfessionalType professionalType,
+
+        @Size(max = 20, message = "면허번호는 20자 이하여야 합니다.")
+        String licenseNumber,
+
+        @Size(max = 10, message = "성별은 10자 이하여야 합니다.")
+        String gender,
+
+        @Min(1) @Max(120)
+        Integer age,
+
+        @DecimalMin("140") @DecimalMax("200")
+        Double height,
+
+        @DecimalMin("30.0") @DecimalMax("200.0")
+        Double weight,
+
+        @Size(max = 100, message = "목표는 100자 이하여야 합니다.")
+        String goal,
+
+        @Min(0) @Max(100)
+        Integer progress
 ) {
 }

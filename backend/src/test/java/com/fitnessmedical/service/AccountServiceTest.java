@@ -23,6 +23,7 @@ import com.fitnessmedical.common.InvalidRequestException;
 import com.fitnessmedical.common.ResourceNotFoundException;
 import com.fitnessmedical.dto.account.AccountCreateRequest;
 import com.fitnessmedical.entity.AccountRole;
+import com.fitnessmedical.entity.ProfessionalType;
 import com.fitnessmedical.repository.AccountRepository;
 import com.fitnessmedical.repository.MemberRepository;
 
@@ -43,109 +44,57 @@ import com.fitnessmedical.repository.MemberRepository;
  */
 class AccountServiceTest {
 
-    // Mockito.mock(): Spring 컨텍스트 없이 가짜 객체를 만든다. (순수 단위 테스트)
     final AccountRepository accountRepository = mock(AccountRepository.class);
 
     final MemberRepository memberRepository = mock(MemberRepository.class);
 
     final PasswordEncoder passwordEncoder = mock(PasswordEncoder.class);
 
-    // 생성자 주입으로 실제 AccountService를 만든다. 의존성만 mock이다.
     final AccountService accountService = new AccountService(
             accountRepository,
             memberRepository,
             passwordEncoder
     );
 
-    /**
-     * [케이스] MEMBER + memberId null
-     * - 검증 레이어(@Valid)가 아니라 Service 규칙이다.
-     * - memberId는 DTO에서 nullable이다. (PROFESSIONAL은 null 허용)
-     * - 그래서 "MEMBER면 필수" 검사는 resolveMember()에서 한다.
-     */
     @Test
-    @DisplayName("MEMBER 계정은 회원 연결이 없으면 생성할 수 없다.")
-    void create_memberWithoutMemberId_throwsInvalidRequestException() {
-        AccountCreateRequest request = new AccountCreateRequest(
-                "member01",
-                "password123",
-                "회원",
-                AccountRole.MEMBER,
-                null
-        );
+    @DisplayName("MEMBER 계정은 회원 연결이나 프로필이 없으면 생성할 수 없다.")
+    void create_memberWithoutMemberIdOrProfile_throwsInvalidRequestException() {
+        AccountCreateRequest request = memberRequest(null);
 
-        // assertThatThrownBy: 예외가 발생하는지 + 타입/메시지를 한 번에 검증
         assertThatThrownBy(() -> accountService.create(request))
                 .isInstanceOf(InvalidRequestException.class)
-                .hasMessage("MEMBER 계정은 회원 연결이 필요합니다.");
+                .hasMessage("MEMBER 계정은 회원 연결 또는 프로필(성별·나이·키·체중·목표)이 필요합니다.");
     }
 
-    /**
-     * [케이스] MEMBER + 정상 memberId → 저장 성공
-     * - given(...): BDD 스타일 stub. "이런 입력이면 이렇게 응답"을 미리 정의
-     * - ArgumentCaptor: save()에 넘어간 실제 인자를 꺼내 검증할 때 사용
-     * - isSameAs: 동일 참조인지 확인. (같은 Member 객체가 연결됐는지)
-     */
     @Test
     @SuppressWarnings("null")
     @DisplayName("MEMBER 계정은 회원 연결이 있으면 생성할 수 있다.")
     void create_memberWithMemberId_createsAccount() {
-        Member member = new Member(
-               "홍길동",
-               "Male",
-               35,
-               175.5,
-               72.3,
-               "건강 습관 만들기",
-               10,
-               MemberStatus.GOOD,
-               LocalDate.now()
-        );
+        Member member = sampleMember();
+        AccountCreateRequest request = memberRequest(1L);
 
-        AccountCreateRequest request = new AccountCreateRequest(
-            "member01",
-            "password123",
-            "홍길동",
-            AccountRole.MEMBER,
-            1L
-        );
-
-        // 성공 경로의 사전조건: 로그인ID 미중복, 회원 존재, 아직 미연결
         given(accountRepository.existsByLoginId("member01")).willReturn(false);
         given(passwordEncoder.encode("password123")).willReturn("encoded-password");
         given(memberRepository.findById(1L)).willReturn(Optional.of(member));
         given(accountRepository.existsByMember_Id(1L)).willReturn(false);
-        // save 인자를 그대로 반환 → 저장된 엔티티를 이어서 검증하기 쉽도록
         given(accountRepository.save(any(Account.class)))
                 .willAnswer(invocation -> invocation.getArgument(0));
 
         accountService.create(request);
 
         ArgumentCaptor<Account> captor = ArgumentCaptor.forClass(Account.class);
-        // verify: save가 정말 호출됐는지 + 그때의 인자를 captor에 담는다
         verify(accountRepository).save(captor.capture());
 
         Account savedAccount = captor.getValue();
         assertThat(savedAccount.getMember()).isSameAs(member);
         assertThat(savedAccount.getRole()).isEqualTo(AccountRole.MEMBER);
+        assertThat(savedAccount.isProfessionalVerified()).isFalse();
     }
 
-    /**
-     * [케이스] 존재하지 않는 memberId
-     * - Optional.empty() → orElseThrow → ResourceNotFoundException
-     * - 면접 포인트: "없는 리소스"는 404가 자연스럽다. (Handler에서 매핑)
-     * - existsByMember_Id는 호출 전에 끝나므로 stub 불필요
-     */
     @Test
     @DisplayName("존재하지 않는 memberId는 연결할 수 없다.")
     void create_memberWithUnknownMemberId_throwsResourceNotFoundException() {
-        AccountCreateRequest request = new AccountCreateRequest(
-                "member01",
-                "password123",
-                "회원",
-                AccountRole.MEMBER,
-                999L
-        );
+        AccountCreateRequest request = memberRequest(999L);
 
         given(memberRepository.findById(999L)).willReturn(Optional.empty());
 
@@ -154,34 +103,11 @@ class AccountServiceTest {
                 .hasMessage("연결할 회원을 찾을 수 없습니다.");
     }
 
-    /**
-     * [케이스] 이미 연결된 memberId
-     * - 회원은 존재(findById 성공)하지만 existsByMember_Id == true
-     * - 1:1 관계이므로 중복 연결은 Conflict(409)로 표현하는 편이 맞다
-     * - 순서 중요: "존재 여부" 확인 후 "이미 연결됐는지" 확인
-     */
     @Test
     @DisplayName("이미 연결된 memberId는 다시 연결할 수 없다.")
     void create_memberWithAlreadyLinkedMemberId_throwsDuplicateResourceException() {
-        Member member = new Member(
-            "홍길동",
-            "Male",
-            35,
-            175.5,
-            72.3,
-            "건강 습관 만들기",
-            10,
-            MemberStatus.GOOD,
-            LocalDate.now()
-        );
-
-        AccountCreateRequest request = new AccountCreateRequest(
-            "member01",
-            "password123",
-            "회원",
-            AccountRole.MEMBER,
-            1L
-        );
+        Member member = sampleMember();
+        AccountCreateRequest request = memberRequest(1L);
 
         given(memberRepository.findById(1L)).willReturn(Optional.of(member));
         given(accountRepository.existsByMember_Id(1L)).willReturn(true);
@@ -191,12 +117,6 @@ class AccountServiceTest {
             .hasMessage("이미 연결된 회원입니다.");
     }
 
-    /**
-     * [케이스] PROFESSIONAL + memberId 제공
-     * - 역할별 불변식(invariant): PROFESSIONAL은 Member와 연결하지 않는다
-     * - findById 전에 막히므로 Repository stub이 필요 없다
-     * - 잘못된 요청 → InvalidRequestException → HTTP 400
-     */
     @Test
     @DisplayName("PROFESSIONAL 계정은 memberId를 가질 수 없다.")
     void create_professionalWithMemberId_throwsInvalidRequestException() {
@@ -205,7 +125,15 @@ class AccountServiceTest {
                 "password123",
                 "전문가",
                 AccountRole.PROFESSIONAL,
-                1L
+                1L,
+                ProfessionalType.TRAINER,
+                "SP21001234",
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
         );
 
         assertThatThrownBy(() -> accountService.create(request))
@@ -213,5 +141,212 @@ class AccountServiceTest {
                 .hasMessage("PROFESSIONAL 계정은 memberId를 가질 수 없습니다.");
     }
 
+    @Test
+    @SuppressWarnings("null")
+    @DisplayName("트레이너는 자격번호 없이도 가입할 수 있다.")
+    void create_trainerWithoutCertificate_isUnverified() {
+        AccountCreateRequest request = new AccountCreateRequest(
+                "trainer01",
+                "password123",
+                "김길명",
+                AccountRole.PROFESSIONAL,
+                null,
+                ProfessionalType.TRAINER,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+        given(accountRepository.existsByLoginId("trainer01")).willReturn(false);
+        given(passwordEncoder.encode("password123")).willReturn("encoded-password");
+        given(accountRepository.save(any(Account.class)))
+                .willAnswer(invocation -> invocation.getArgument(0));
 
+        accountService.create(request);
+
+        ArgumentCaptor<Account> captor = ArgumentCaptor.forClass(Account.class);
+        verify(accountRepository).save(captor.capture());
+        Account saved = captor.getValue();
+        assertThat(saved.getProfessionalType()).isEqualTo(ProfessionalType.TRAINER);
+        assertThat(saved.getLicenseNumber()).isNull();
+        assertThat(saved.isProfessionalVerified()).isFalse();
+    }
+
+    @Test
+    @DisplayName("트레이너 자격번호 형식이 아니면 가입할 수 없다.")
+    void create_trainerWithInvalidCertificate_throwsInvalidRequestException() {
+        AccountCreateRequest request = new AccountCreateRequest(
+                "trainer01",
+                "password123",
+                "김길명",
+                AccountRole.PROFESSIONAL,
+                null,
+                ProfessionalType.TRAINER,
+                "123456",
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+
+        assertThatThrownBy(() -> accountService.create(request))
+                .isInstanceOf(InvalidRequestException.class)
+                .hasMessage("생활스포츠지도사 자격번호 형식이 올바르지 않습니다.");
+    }
+
+    @Test
+    @SuppressWarnings("null")
+    @DisplayName("트레이너는 자격번호 형식이 맞으면 전문직 인증이 완료된다.")
+    void create_trainerWithValidCertificate_isVerified() {
+        AccountCreateRequest request = new AccountCreateRequest(
+                "trainer01",
+                "password123",
+                "김길명",
+                AccountRole.PROFESSIONAL,
+                null,
+                ProfessionalType.TRAINER,
+                "sp21001234",
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+        given(accountRepository.existsByLoginId("trainer01")).willReturn(false);
+        given(accountRepository.existsByLicenseNumber("sp21001234")).willReturn(false);
+        given(accountRepository.existsByLicenseNumber("SP21001234")).willReturn(false);
+        given(passwordEncoder.encode("password123")).willReturn("encoded-password");
+        given(accountRepository.save(any(Account.class)))
+                .willAnswer(invocation -> invocation.getArgument(0));
+
+        accountService.create(request);
+
+        ArgumentCaptor<Account> captor = ArgumentCaptor.forClass(Account.class);
+        verify(accountRepository).save(captor.capture());
+        Account saved = captor.getValue();
+        assertThat(saved.getProfessionalType()).isEqualTo(ProfessionalType.TRAINER);
+        assertThat(saved.getLicenseNumber()).isEqualTo("SP21001234");
+        assertThat(saved.isProfessionalVerified()).isTrue();
+    }
+
+    @Test
+    @DisplayName("전문의는 면허번호가 없으면 가입할 수 없다.")
+    void create_physicianWithoutLicense_throwsInvalidRequestException() {
+        AccountCreateRequest request = new AccountCreateRequest(
+                "doctor01",
+                "password123",
+                "홍길동",
+                AccountRole.PROFESSIONAL,
+                null,
+                ProfessionalType.PHYSICIAN,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+
+        assertThatThrownBy(() -> accountService.create(request))
+                .isInstanceOf(InvalidRequestException.class)
+                .hasMessage("전문의는 면허번호가 필요합니다.");
+    }
+
+    @Test
+    @DisplayName("전문의 면허번호 형식이 아니면 가입할 수 없다.")
+    void create_physicianWithInvalidLicense_throwsInvalidRequestException() {
+        AccountCreateRequest request = new AccountCreateRequest(
+                "doctor01",
+                "password123",
+                "홍길동",
+                AccountRole.PROFESSIONAL,
+                null,
+                ProfessionalType.PHYSICIAN,
+                "ABC",
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+
+        assertThatThrownBy(() -> accountService.create(request))
+                .isInstanceOf(InvalidRequestException.class)
+                .hasMessage("전문의 면허번호 형식이 올바르지 않습니다.");
+    }
+
+    @Test
+    @SuppressWarnings("null")
+    @DisplayName("전문의는 면허번호 형식이 맞으면 전문직 인증이 완료된다.")
+    void create_physicianWithValidLicense_isVerified() {
+        AccountCreateRequest request = new AccountCreateRequest(
+                "doctor01",
+                "password123",
+                "홍길동",
+                AccountRole.PROFESSIONAL,
+                null,
+                ProfessionalType.PHYSICIAN,
+                "123456",
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+        given(accountRepository.existsByLoginId("doctor01")).willReturn(false);
+        given(accountRepository.existsByLicenseNumber("123456")).willReturn(false);
+        given(passwordEncoder.encode("password123")).willReturn("encoded-password");
+        given(accountRepository.save(any(Account.class)))
+                .willAnswer(invocation -> invocation.getArgument(0));
+
+        accountService.create(request);
+
+        ArgumentCaptor<Account> captor = ArgumentCaptor.forClass(Account.class);
+        verify(accountRepository).save(captor.capture());
+        Account saved = captor.getValue();
+        assertThat(saved.getProfessionalType()).isEqualTo(ProfessionalType.PHYSICIAN);
+        assertThat(saved.getLicenseNumber()).isEqualTo("123456");
+        assertThat(saved.isProfessionalVerified()).isTrue();
+    }
+
+    private AccountCreateRequest memberRequest(Long memberId) {
+        return new AccountCreateRequest(
+                "member01",
+                "password123",
+                "회원",
+                AccountRole.MEMBER,
+                memberId,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+    }
+
+    private Member sampleMember() {
+        return new Member(
+                "홍길동",
+                "Male",
+                35,
+                175.5,
+                72.3,
+                "건강 습관 만들기",
+                10,
+                MemberStatus.GOOD,
+                LocalDate.now()
+        );
+    }
 }

@@ -19,6 +19,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { StateView } from '../components/common/StateView';
 import { LoginPage } from '../pages/auth/LoginPage';
+import { SignupPage } from '../pages/auth/SignupPage';
 import { PlaceholderPage } from '../pages/common/PlaceholderPage';
 import { LandingPage } from '../pages/landing/LandingPage';
 import { HealthRecordsPage } from '../pages/member/HealthRecordsPage';
@@ -65,6 +66,7 @@ export function AppRouter() {
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/signup" element={<SignupPage />} />
       <Route
         path="/member"
         element={

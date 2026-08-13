@@ -14,6 +14,6 @@ package com.fitnessmedical.entity;
 public enum AccountRole {
     // 일반 회원 — Account.member FK로 Member 1:1 연결 필수
     MEMBER,
-    // 재활·운동 전문가 — Account.member는 null
+    // 트레이너·전문의 — Account.member는 null. 세부 유형은 ProfessionalType
     PROFESSIONAL
 }

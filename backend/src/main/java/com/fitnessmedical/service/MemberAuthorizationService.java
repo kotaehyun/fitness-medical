@@ -8,6 +8,7 @@ import com.fitnessmedical.common.InvalidCredentialsException;
 import com.fitnessmedical.entity.Account;
 import com.fitnessmedical.entity.AccountRole;
 import com.fitnessmedical.entity.Member;
+import com.fitnessmedical.entity.ProfessionalType;
 import com.fitnessmedical.repository.AccountRepository;
 
 /**
@@ -19,6 +20,10 @@ import com.fitnessmedical.repository.AccountRepository;
  *
  * Q. 왜 loginId로 Account를 다시 읽나?
  * A. UserDetails에는 username(loginId)·role만 있다. memberId·displayName은 Account에 있다.
+ *
+ * Q. professionalVerified를 여기서 막으면?
+ * A. 전문의는 면허 인증이 필수라서 verified=false면 403.
+ *    트레이너 자격은 우대라서 verified=false여도 PROFESSIONAL이면 피드백·회원 CRUD 가능.
  */
 @Service
 @Transactional(readOnly = true)
@@ -42,6 +47,10 @@ public class MemberAuthorizationService {
         Account account = requireAccount(loginId);
         if (account.getRole() != AccountRole.PROFESSIONAL) {
             throw new ForbiddenException("전문가 권한이 필요합니다.");
+        }
+        boolean unverifiedTrainer = account.getProfessionalType() == ProfessionalType.TRAINER;
+        if (!account.isProfessionalVerified() && !unverifiedTrainer) {
+            throw new ForbiddenException("전문직 인증이 완료되지 않았습니다.");
         }
         return account;
     }

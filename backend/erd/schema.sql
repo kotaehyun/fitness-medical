@@ -20,6 +20,9 @@ CREATE TABLE accounts (
     password VARCHAR(100) NOT NULL,
     display_name VARCHAR(30) NOT NULL,
     role VARCHAR(20) NOT NULL,
+    professional_type VARCHAR(20) NULL,
+    license_number VARCHAR(20) NULL, -- 전문의 면허 또는 트레이너 자격번호
+    professional_verified BOOLEAN NOT NULL DEFAULT FALSE,
     member_id BIGINT NULL,
     CONSTRAINT uk_accounts_login_id UNIQUE (login_id),
     CONSTRAINT uk_accounts_member_id UNIQUE (member_id),

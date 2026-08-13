@@ -66,7 +66,12 @@ export function LoginPage() {
       }
     } catch (requestError) {
       // [면접] 에러 메시지에 password 포함 금지 — loginId만 사용자에게 안내
-      setError(requestError.message || '로그인에 실패했습니다. 아이디와 비밀번호를 확인해 주세요.');
+      // checkJs: catch는 unknown → instanceof Error 후에만 .message
+      const message =
+        requestError instanceof Error
+          ? requestError.message
+          : '로그인에 실패했습니다. 아이디와 비밀번호를 확인해 주세요.';
+      setError(message || '로그인에 실패했습니다. 아이디와 비밀번호를 확인해 주세요.');
     } finally {
       setLoading(false);
     }
@@ -183,6 +188,9 @@ export function LoginPage() {
               {loading ? '로그인 중...' : '로그인'}
             </button>
           </form>
+          <p className="auth-switch">
+            계정이 없나요? <Link to="/signup">회원가입</Link>
+          </p>
           <Disclaimer />
         </div>
       </main>

@@ -921,6 +921,64 @@ p {
   margin-top: 20px;
   text-align: center;
 }
+.role-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.role-toggle.compact {
+  margin-top: -4px;
+}
+.role-toggle > button {
+  height: 44px;
+  border: 1px solid #e1e6e9;
+  background: white;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 13px;
+}
+.role-toggle > button.selected,
+.role-toggle > button:hover {
+  border-color: var(--mint);
+  background: #f7fdfa;
+  color: #0f6e5c;
+}
+.signup-grid {
+  margin-top: 0;
+}
+.signup-grid select {
+  height: 44px;
+  border: 1px solid #dce2e6;
+  border-radius: 9px;
+  padding: 0 11px;
+  outline: 0;
+  background: white;
+}
+.signup-hint {
+  color: #74808c;
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 0;
+}
+.auth-switch {
+  margin: 16px 0 0;
+  text-align: center;
+  font-size: 13px;
+  color: #697583;
+}
+.auth-switch a {
+  color: #0f6e5c;
+  font-weight: 700;
+}
+.login-card .form-error {
+  color: #c0392b;
+  font-size: 12px;
+  margin: 0;
+}
 /* shell */
 .app-shell {
   min-height: 100vh;

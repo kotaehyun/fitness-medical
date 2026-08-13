@@ -13,6 +13,7 @@ import org.mockito.ArgumentCaptor;
 import com.fitnessmedical.dto.feedback.FeedbackRequest;
 import com.fitnessmedical.entity.Account;
 import com.fitnessmedical.entity.AccountRole;
+import com.fitnessmedical.entity.ProfessionalType;
 import com.fitnessmedical.entity.Feedback;
 import com.fitnessmedical.entity.Member;
 import com.fitnessmedical.repository.FeedbackRepository;
@@ -32,7 +33,10 @@ class FeedbackServiceTest {
                 "encoded",
                 "김전문가",
                 AccountRole.PROFESSIONAL,
-                null
+                null,
+                ProfessionalType.PHYSICIAN,
+                "123456",
+                true
         );
         given(memberService.getMember(1L)).willReturn(member);
         given(feedbackRepository.save(any(Feedback.class)))
@@ -48,7 +52,7 @@ class FeedbackServiceTest {
         verify(feedbackRepository).save(captor.capture());
         Feedback saved = captor.getValue();
         assertThat(saved.getAuthor()).isEqualTo("김전문가");
-        assertThat(saved.getRole()).isEqualTo("전문가");
+        assertThat(saved.getRole()).isEqualTo("전문의");
         assertThat(saved.getContent()).isEqualTo("규칙적인 걷기 시간을 유지해 보세요.");
     }
 }

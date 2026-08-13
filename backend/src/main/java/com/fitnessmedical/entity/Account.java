@@ -18,9 +18,8 @@ import jakarta.persistence.*;
  * {@code member_id} FK가 {@code unique}이므로 한 회원당 계정은 최대 1개입니다.
  * {@link AccountRole#PROFESSIONAL}은 {@code member == null}이어야 합니다.</p>
  *
- * <p><b>Q. password 필드를 로그·응답에 넣어도 되나?</b><br>
- * A. 절대 안 됩니다. 평문·BCrypt 해시 모두 민감 정보입니다.
- * {@link AccountResponse}에도 password는 포함하지 않습니다.</p>
+ * <p><b>Q. password·면허번호를 로그·응답에 넣어도 되나?</b><br>
+ * A. 절대 안 됩니다. {@link AccountResponse}에도 password·licenseNumber는 포함하지 않습니다.</p>
  */
 @Entity
 @Table(
@@ -54,6 +53,17 @@ public class Account {
     @Column(nullable = false, length = 20)
     private AccountRole role;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "professional_type", length = 20)
+    private ProfessionalType professionalType;
+
+    // 전문의 면허 또는 트레이너 자격번호 — 로깅·응답 금지
+    @Column(name = "license_number", length = 20)
+    private String licenseNumber;
+
+    @Column(name = "professional_verified", nullable = false)
+    private boolean professionalVerified;
+
     // MEMBER 역할일 때만 Member와 1:1 연결. PROFESSIONAL은 null.
     // LAZY: member 필드 접근 시점까지 JOIN 지연 → N+1 주의, 트랜잭션 내 접근 권장
     @OneToOne(fetch = FetchType.LAZY)
@@ -64,7 +74,6 @@ public class Account {
     protected Account() {
     }
 
-    // 애플리케이션에서 계정 생성 시 사용. role에 따라 member null 여부는 Service에서 검증
     public Account(
             String loginId,
             String password,
@@ -72,11 +81,27 @@ public class Account {
             AccountRole role,
             Member member
     ) {
+        this(loginId, password, displayName, role, member, null, null, false);
+    }
+
+    public Account(
+            String loginId,
+            String password,
+            String displayName,
+            AccountRole role,
+            Member member,
+            ProfessionalType professionalType,
+            String licenseNumber,
+            boolean professionalVerified
+    ) {
         this.loginId = loginId;
         this.password = password;
         this.displayName = displayName;
         this.role = role;
         this.member = member;
+        this.professionalType = professionalType;
+        this.licenseNumber = licenseNumber;
+        this.professionalVerified = professionalVerified;
     }
 
     public Long getId() {
@@ -98,6 +123,18 @@ public class Account {
 
     public AccountRole getRole() {
         return role;
+    }
+
+    public ProfessionalType getProfessionalType() {
+        return professionalType;
+    }
+
+    public String getLicenseNumber() {
+        return licenseNumber;
+    }
+
+    public boolean isProfessionalVerified() {
+        return professionalVerified;
     }
 
     public Member getMember() {

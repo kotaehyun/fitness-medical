@@ -1,9 +1,13 @@
 package com.fitnessmedical.config;
 
+import com.fitnessmedical.entity.Account;
+import com.fitnessmedical.entity.AccountRole;
 import com.fitnessmedical.entity.Feedback;
 import com.fitnessmedical.entity.HealthRecord;
 import com.fitnessmedical.entity.Member;
 import com.fitnessmedical.entity.MemberStatus;
+import com.fitnessmedical.entity.ProfessionalType;
+import com.fitnessmedical.repository.AccountRepository;
 import com.fitnessmedical.repository.FeedbackRepository;
 import com.fitnessmedical.repository.HealthRecordRepository;
 import com.fitnessmedical.repository.MemberRepository;
@@ -11,6 +15,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -44,7 +49,9 @@ public class DemoDataConfig {
         // Spring Boot 기동 완료 후 1회 실행 — Repository가 준비된 뒤 INSERT하기 위함
         public CommandLineRunner insertDemoData(MemberRepository memberRepository,
                         HealthRecordRepository healthRecordRepository,
-                        FeedbackRepository feedbackRepository) {
+                        FeedbackRepository feedbackRepository,
+                        AccountRepository accountRepository,
+                        PasswordEncoder passwordEncoder) {
                 return args -> {
                         // saveAll은 여러 Entity를 한 번에 저장합니다.
                         List<Member> members = memberRepository.saveAll(List.of(
@@ -86,6 +93,37 @@ public class DemoDataConfig {
                                                         "최근 기록이 안정적으로 이어지고 있습니다. 무릎에 부담이 없는 범위에서 걷기 시간을 천천히 늘려보세요."),
                                         new Feedback(kimSunja, "김길명", "운동 전문가", LocalDate.of(2026, 7, 16),
                                                         "이번 주 운동 목표를 잘 지키고 있어요. 다음 운동에서는 스트레칭 시간을 5분 더 확보해 보세요.")));
+
+                        String demoPassword = passwordEncoder.encode("password123");
+                        accountRepository.saveAll(List.of(
+                                        new Account(
+                                                        "member01",
+                                                        demoPassword,
+                                                        "김순자",
+                                                        AccountRole.MEMBER,
+                                                        kimSunja
+                                        ),
+                                        new Account(
+                                                        "trainer01",
+                                                        demoPassword,
+                                                        "김길명",
+                                                        AccountRole.PROFESSIONAL,
+                                                        null,
+                                                        ProfessionalType.TRAINER,
+                                                        "SP21001234",
+                                                        true
+                                        ),
+                                        new Account(
+                                                        "doctor01",
+                                                        demoPassword,
+                                                        "홍길동",
+                                                        AccountRole.PROFESSIONAL,
+                                                        null,
+                                                        ProfessionalType.PHYSICIAN,
+                                                        "123456",
+                                                        true
+                                        )
+                        ));
                 };
         }
 }

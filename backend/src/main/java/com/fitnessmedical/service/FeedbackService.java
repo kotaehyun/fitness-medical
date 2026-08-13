@@ -4,6 +4,7 @@ import com.fitnessmedical.dto.feedback.FeedbackRequest;
 import com.fitnessmedical.dto.feedback.FeedbackResponse;
 import com.fitnessmedical.entity.Account;
 import com.fitnessmedical.entity.AccountRole;
+import com.fitnessmedical.entity.ProfessionalType;
 import com.fitnessmedical.repository.FeedbackRepository;
 import com.fitnessmedical.entity.Feedback;
 import com.fitnessmedical.entity.Member;
@@ -63,9 +64,10 @@ public class FeedbackService {
     public FeedbackResponse create(Long memberId, FeedbackRequest request, Account writer) {
 
         Member member = memberService.getMember(memberId);
-        String roleLabel = writer.getRole() == AccountRole.PROFESSIONAL
-                ? "전문가"
-                : writer.getRole().name();
+        ProfessionalType professionalType = writer.getProfessionalType();
+        String roleLabel = professionalType != null
+                ? professionalType.getLabel()
+                : writer.getRole() == AccountRole.PROFESSIONAL ? "전문가" : writer.getRole().name();
 
         Feedback feedback = new Feedback(
                 member,
