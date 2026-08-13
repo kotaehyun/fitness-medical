@@ -21,6 +21,7 @@ import {
   Home,
   MessageSquareText,
   Moon,
+  Settings,
   Sparkles,
   Target,
   Weight,

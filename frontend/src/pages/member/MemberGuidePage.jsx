@@ -10,7 +10,6 @@
 import { useState } from 'react';
 import { Sparkles } from 'lucide-react';
 import { AppShell } from '../../components/layout/AppShell';
-import { Disclaimer } from '../../components/common/Disclaimer';
 import { healthService } from '../../services/healthService';
 import { memberNav } from './MemberDashboard';
 
@@ -55,66 +54,59 @@ export function MemberGuidePage() {
         </span>
       </div>
 
-      <section className="card">
+      <section className="card feedback-form">
         <div className="card-head">
           <div>
             <h3>질문하기</h3>
             <span>의료 진단·처방 질문은 답하지 않습니다.</span>
           </div>
         </div>
-        <form className="feedback-form" onSubmit={handleAsk}>
-          <label>
-            질문
-            <textarea
-              rows={3}
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="예: 수면의 질을 높이려면?"
-              maxLength={500}
-            />
-          </label>
+        <form onSubmit={handleAsk}>
+          <label htmlFor="lifestyle-query">질문</label>
+          <textarea
+            id="lifestyle-query"
+            rows={4}
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="예: 수면의 질을 높이려면?"
+            maxLength={500}
+          />
           <button className="button" type="submit" disabled={loading}>
             {loading ? '답변 생성 중…' : '안내 받기'}
           </button>
         </form>
-        {error ? <p className="disclaimer">{error}</p> : null}
+        {error ? <p className="form-error">{error}</p> : null}
       </section>
 
       {result ? (
-        <section className="card feedback-history" style={{ marginTop: '1.25rem' }}>
+        <section className="card guide-result">
           <div className="card-head">
             <div>
               <h3>안내 답변</h3>
               <span>model: {result.model}</span>
             </div>
           </div>
-          <article>
-            <div>
-              <p>{result.answer}</p>
-            </div>
-          </article>
+          <p className="guide-answer">{result.answer}</p>
           {result.sources?.length ? (
             <>
-              <div className="card-head" style={{ marginTop: '1rem' }}>
+              <div className="card-head guide-sources-head">
                 <div>
                   <h3>참고한 문서 조각</h3>
                   <span>{result.sources.length}건</span>
                 </div>
               </div>
-              {result.sources.map((source) => (
-                <article key={source.chunkId || `${source.documentId}-${source.chunkIndex}`}>
-                  <div>
+              <ul className="guide-sources">
+                {result.sources.map((source) => (
+                  <li key={source.chunkId || `${source.documentId}-${source.chunkIndex}`}>
                     <b>{source.title || '문서'}</b>
                     <p>{source.content}</p>
-                  </div>
-                </article>
-              ))}
+                  </li>
+                ))}
+              </ul>
             </>
           ) : null}
         </section>
       ) : null}
-
-      <Disclaimer />
     </AppShell>
   );
 }

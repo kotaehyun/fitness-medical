@@ -22,9 +22,11 @@ Spring Boot (회원·건강 기록, MySQL)
 - `GET /documents/{id}/chunks` 저장된 Chunk 조회
 - `POST /search` 비슷한 Chunk 검색 (`query`, `n_results`)
 - `POST /ask` 검색 근거로 답변 생성 (`answer` + `sources`)
+- 질문/답변 가드레일: 진단·처방·약 용량 요청·단정 문장 차단 (`model: guardrail`)
 - `GET /health` Mongo / Chroma / Ollama 연결 상태
 
 근거 Chunk가 없으면 LLM을 호출하지 않고 안내 문구만 반환합니다.
+진단·처방 성격의 질문은 검색·LLM 전에 거절합니다.
 
 ## 실행 전 준비
 
