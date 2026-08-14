@@ -10,7 +10,15 @@
  */
 import { Construction } from 'lucide-react';
 import { AppShell } from '../../components/layout/AppShell';
-export function PlaceholderPage({ nav, professional = false, workspaceLabel }) {
+
+/**
+ * @param {{
+ *   nav: { label: string, path: string, icon?: import('react').ComponentType }[],
+ *   professional?: boolean,
+ *   workspaceLabel?: string,
+ * }} props
+ */
+export function PlaceholderPage({ nav, professional = false, workspaceLabel = undefined }) {
   return (
     <AppShell nav={nav} professional={professional} workspaceLabel={workspaceLabel}>
       <div className="placeholder card">

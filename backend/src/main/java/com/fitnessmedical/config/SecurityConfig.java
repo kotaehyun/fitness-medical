@@ -93,6 +93,16 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         // 건강·회원 데이터는 로그인 필수. 본인 소유권은 Service에서 검증
                         .requestMatchers("/api/members/**").authenticated()
+                        // region [직접구현] AI 생활안내 API 인증
+                        // Q. 왜 /api/** permitAll 보다 앞에 두나?
+                        // A. Spring Security는 위에서 아래로 첫 매칭만 쓴다.
+                        //    이 줄을 빼면 POST /api/ai/ask 가 permitAll에 걸려 비로그인도 통과한다.
+                        //
+                        .requestMatchers("/api/ai/**").authenticated()
+                        //
+                        // 역할(MEMBER/PROFESSIONAL/ADMIN)은 여기서 나누지 않는다. 로그인만 막는다.
+                        // 진단·처방 API가 아니다. FastAPI는 그대로 두고 Spring 입구만 잠근다.
+                        // endregion
                         // AI 시연 등 나머지 /api/** 는 로컬 학습용으로 열어 둠
                         .requestMatchers("/api/**").permitAll()
                         // 위에 매칭되지 않은 경로는 인증 필요

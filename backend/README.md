@@ -47,7 +47,7 @@ cd backend
 | GET | `/api/members/{id}/records` | 회원 건강 기록 조회 |
 | POST | `/api/members/{id}/records` | 건강 기록 등록 |
 | GET | `/api/members/{id}/feedback` | 회원 피드백 조회 |
-| POST | `/api/ai/ask` | FastAPI RAG 생활 안내 질문 (`fitness.ai.base-url`) |
+| POST | `/api/ai/ask` | FastAPI RAG 생활 안내 질문 (`fitness.ai.base-url`). **로그인 필수 — SecurityConfig [직접구현]** |
 
 ## 패키지 구조
 

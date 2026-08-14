@@ -18,10 +18,13 @@ import com.fitnessmedical.service.AiAskService;
  *
  * <pre>
  * POST /api/ai/ask
+ * → (Security: 로그인 세션 필요 — SecurityConfig에서 [직접구현])
  * → AiAskService
  * → RestClient POST {AI_BASE_URL}/ask
  * → FastAPI (Chroma 검색 + Ollama)
  * </pre>
+ *
+ * <p>이 Controller에 hasRole을 넣지 않는다. URL 권한은 SecurityFilterChain 책임이다.</p>
  */
 @RestController
 @RequestMapping("/api/ai")

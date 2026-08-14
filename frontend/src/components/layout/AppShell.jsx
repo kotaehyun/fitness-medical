@@ -16,11 +16,20 @@ import { Link, NavLink } from 'react-router-dom';
 import { Disclaimer } from '../common/Disclaimer';
 import { Logo } from '../common/Logo';
 import { accountRoleLabel, useAuthSession, useLogout } from '../../hooks/useAuthSession';
+
+/**
+ * @param {{
+ *   children: import('react').ReactNode,
+ *   nav: { label: string, path: string, icon?: import('react').ComponentType }[],
+ *   professional?: boolean,
+ *   workspaceLabel?: string,
+ * }} props
+ */
 export function AppShell({
   children,
   nav,
   professional = false,
-  workspaceLabel,
+  workspaceLabel = undefined,
 }) {
   const [open, setOpen] = useState(false);
   const { account } = useAuthSession();
