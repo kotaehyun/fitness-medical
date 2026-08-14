@@ -53,6 +53,10 @@ public class DemoDataConfig {
                         AccountRepository accountRepository,
                         PasswordEncoder passwordEncoder) {
                 return args -> {
+
+                        if (accountRepository.existsByLoginId("member01")) {
+                                return;
+                        }
                         // saveAll은 여러 Entity를 한 번에 저장합니다.
                         List<Member> members = memberRepository.saveAll(List.of(
                                         new Member("김순자", "여성", 56, 164, 68, "건강한 일상 복귀", 70,

@@ -28,6 +28,7 @@ Fitness Medical 프로젝트의 학습/진행 기록용 문서 폴더입니다. 
 | 2026-08-13 | [회원 API 소유권 + 전문직 미인증 가입](./progress/2026-08-13-회원api-소유권-전문직가입.md) |
 | 2026-08-13 | [ADMIN 승인·세션 UX·가입 현황](./progress/2026-08-13-admin-세션ux-가입현황.md) |
 | 2026-08-14 | [AI /ask 로그인 필수 + 파비콘](./progress/2026-08-14-ai-ask-인증-파비콘.md) |
+| 2026-08-14 | [Repository 테스트 + 파일 H2](./progress/2026-08-14-h2파일-repository테스트.md) |
 
 ### decisions
 
