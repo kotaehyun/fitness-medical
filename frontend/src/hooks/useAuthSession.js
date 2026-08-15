@@ -18,6 +18,7 @@ export const AUTH_QUERY_KEY = ['auth', 'me'];
 function demoAccount(role) {
   if (role === 'PROFESSIONAL') {
   return {
+    id: 3,
     displayName: '홍길동',
     role: 'PROFESSIONAL',
     professionalType: 'PHYSICIAN',
@@ -26,6 +27,7 @@ function demoAccount(role) {
   };
   }
   return {
+    id: 1,
     displayName: '김순자',
     role: 'MEMBER',
     professionalType: null,
@@ -73,6 +75,7 @@ export async function clearAuthSession(queryClient) {
   queryClient.removeQueries({ queryKey: ['records'] });
   queryClient.removeQueries({ queryKey: ['feedback'] });
   queryClient.removeQueries({ queryKey: ['admin'] });
+  queryClient.removeQueries({ queryKey: ['messages'] });
 }
 
 export function useAuthSession() {

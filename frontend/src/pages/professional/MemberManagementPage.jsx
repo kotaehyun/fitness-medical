@@ -23,6 +23,17 @@ import { useMembers } from '../../hooks/useDashboardData';
 import { healthService } from '../../services/healthService';
 import { professionalNav } from './ProfessionalDashboard';
 
+function assignmentLabel(member) {
+  const parts = [];
+  if (member.physicianDisplayName) {
+    parts.push(`담당 전문의 ${member.physicianDisplayName}`);
+  }
+  if (member.trainerDisplayName) {
+    parts.push(`담당 트레이너 ${member.trainerDisplayName}`);
+  }
+  return parts.length ? parts.join(' · ') : '담당 없음';
+}
+
 export function MemberManagementPage() {
   const { account, demoRole } = useAuthSession();
   const pendingVerification = !demoRole && account?.professionalVerified === false;
@@ -114,6 +125,9 @@ export function MemberManagementPage() {
                   <b>{member.name}</b>
                   <small>
                     {member.gender} · {member.age}세
+                  </small>
+                  <small className="member-care">
+                    {assignmentLabel(member)}
                   </small>
                 </span>
               </span>

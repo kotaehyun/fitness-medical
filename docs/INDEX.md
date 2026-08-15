@@ -30,11 +30,13 @@ Fitness Medical 프로젝트의 학습/진행 기록용 문서 폴더입니다. 
 | 2026-08-14 | [AI /ask 로그인 필수 + 파비콘](./progress/2026-08-14-ai-ask-인증-파비콘.md) |
 | 2026-08-14 | [Repository 테스트 + 파일 H2](./progress/2026-08-14-h2파일-repository테스트.md) |
 | 2026-08-15 | [시드 가드·사이드바·README·문서 규칙](./progress/2026-08-15-시드가드-사이드바-문서규칙.md) |
+| 2026-08-16 | [담당 표시·텍스트 대화창](./progress/2026-08-16-담당-텍스트채팅.md) |
 
 ### decisions
 
 - [MemberCreateRequest 필드 설계](./decisions/member-create-request-필드-설계.md) (1단계)
 - [계정·역할·소유권](./decisions/계정-역할-소유권.md) (가입·세션·승인)
+- [담당 연결과 텍스트 채팅](./decisions/담당-텍스트채팅.md)
 
 ### troubleshooting
 
@@ -49,6 +51,7 @@ Fitness Medical 프로젝트의 학습/진행 기록용 문서 폴더입니다. 
 
 - [2026-08-06 프론트엔드·Spring API 연동](./report/2026-08-06-frontend-spring-api-연동.md)
 - [2026-08-13 관리자 승인·세션 UX·가입 현황](./report/2026-08-13-admin-auth-session-가입현황.md)
+- [2026-08-16 담당 연결·텍스트 채팅](./report/2026-08-16-담당-텍스트채팅.md)
 
 ## 작성 규칙
 

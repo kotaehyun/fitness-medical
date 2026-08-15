@@ -56,3 +56,24 @@ CREATE TABLE feedbacks (
     CONSTRAINT fk_feedbacks_member
         FOREIGN KEY (member_id) REFERENCES members(id)
 );
+
+CREATE TABLE member_assignments (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    member_id BIGINT NOT NULL,
+    physician_account_id BIGINT NULL,
+    trainer_account_id BIGINT NULL,
+    CONSTRAINT uk_member_assignments_member UNIQUE (member_id),
+    CONSTRAINT fk_assignments_member FOREIGN KEY (member_id) REFERENCES members(id),
+    CONSTRAINT fk_assignments_physician FOREIGN KEY (physician_account_id) REFERENCES accounts(id),
+    CONSTRAINT fk_assignments_trainer FOREIGN KEY (trainer_account_id) REFERENCES accounts(id)
+);
+
+CREATE TABLE chat_messages (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    sender_account_id BIGINT NOT NULL,
+    receiver_account_id BIGINT NOT NULL,
+    body VARCHAR(1000) NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+    CONSTRAINT fk_chat_sender FOREIGN KEY (sender_account_id) REFERENCES accounts(id),
+    CONSTRAINT fk_chat_receiver FOREIGN KEY (receiver_account_id) REFERENCES accounts(id)
+);

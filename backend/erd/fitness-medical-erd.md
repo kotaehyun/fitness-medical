@@ -5,6 +5,11 @@ erDiagram
     MEMBERS ||--o| ACCOUNTS : "회원은 계정 0~1개"
     MEMBERS ||--o{ HEALTH_RECORDS : "회원은 건강 기록을 작성한다"
     MEMBERS ||--o{ FEEDBACKS : "회원은 전문가 피드백을 받는다"
+    MEMBERS ||--o| MEMBER_ASSIGNMENTS : "회원은 담당 연결 0~1개"
+    ACCOUNTS ||--o{ MEMBER_ASSIGNMENTS : "전문의 담당"
+    ACCOUNTS ||--o{ MEMBER_ASSIGNMENTS : "트레이너 담당"
+    ACCOUNTS ||--o{ CHAT_MESSAGES : "메시지를 보낸다"
+    ACCOUNTS ||--o{ CHAT_MESSAGES : "메시지를 받는다"
 
     MEMBERS {
         BIGINT id PK "회원 ID"
@@ -52,6 +57,21 @@ erDiagram
         DATE written_date "작성일"
         VARCHAR content "피드백 내용"
     }
+
+    MEMBER_ASSIGNMENTS {
+        BIGINT id PK "담당 ID"
+        BIGINT member_id FK_UK "회원"
+        BIGINT physician_account_id FK "담당 전문의 계정"
+        BIGINT trainer_account_id FK "담당 트레이너 계정"
+    }
+
+    CHAT_MESSAGES {
+        BIGINT id PK "메시지 ID"
+        BIGINT sender_account_id FK "보낸 계정"
+        BIGINT receiver_account_id FK "받는 계정"
+        VARCHAR body "텍스트"
+        TIMESTAMP created_at "작성 시각"
+    }
 ```
 
 ## 관계 해석
@@ -75,6 +95,5 @@ erDiagram
 - `professionals`: 의료 전문가와 트레이너 정보
 - `goals`: 회원별 건강 목표
 - `appointments`: 회원과 전문가 예약
-- `professional_members`: 전문가와 담당 회원의 연결
 
 MongoDB의 RAG 문서는 관계형 테이블이 아니므로 이 ERD와 분리해서 관리합니다.

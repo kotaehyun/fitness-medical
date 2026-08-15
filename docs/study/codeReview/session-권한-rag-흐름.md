@@ -32,6 +32,7 @@ POST /api/auth/login
 | `POST /api/members/*/feedback` | ROLE_PROFESSIONAL |
 | `/api/admin/**` | ROLE_ADMIN |
 | `/api/members/**` | authenticated (소유권은 Service) |
+| `/api/messages/**` | authenticated (담당 연결은 MessageService) |
 | `/api/ai/**` | authenticated (`/api/**` permitAll보다 앞) |
 | 나머지 `/api/**` | permitAll (로컬 학습) |
 
@@ -46,6 +47,8 @@ POST /api/auth/login
 - ADMIN: 이 서비스로 건강 API를 열지 않음. `/api/admin/**`만
 
 공개 가입 `memberId`는 `AccountService.resolveMember`가 400. MEMBER는 프로필로 새 Member. PROFESSIONAL은 `member == null`.
+
+채팅은 건강 API와 별도. `MessageService`가 담당 연결만 연다. 자기 자신과의 대화는 400.
 
 ## RAG
 

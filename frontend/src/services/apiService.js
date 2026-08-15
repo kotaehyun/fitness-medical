@@ -208,4 +208,19 @@ export const apiService = {
       body: JSON.stringify({ query, nResults }),
     });
   },
+
+  async getChatPeers() {
+    return request('/messages/peers');
+  },
+
+  async getChatMessages(peerAccountId) {
+    return request(`/messages?peerAccountId=${peerAccountId}`);
+  },
+
+  async sendChatMessage(peerAccountId, body) {
+    return request('/messages', {
+      method: 'POST',
+      body: JSON.stringify({ peerAccountId, body }),
+    });
+  },
 };

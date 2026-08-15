@@ -47,6 +47,9 @@ SERVER_PORT=8081 ./gradlew bootRun
 | GET | `/api/members/{id}/records` | 회원 건강 기록 조회 |
 | POST | `/api/members/{id}/records` | 건강 기록 등록 |
 | GET | `/api/members/{id}/feedback` | 회원 피드백 조회 |
+| GET | `/api/messages/peers` | 담당으로 연결된 대화 상대 (로그인 필수) |
+| GET | `/api/messages?peerAccountId=` | 해당 상대와의 텍스트 대화 |
+| POST | `/api/messages` | 텍스트 전송. 담당이 아니면 403, 자기 자신이면 400 |
 | POST | `/api/ai/ask` | FastAPI RAG 생활 안내 질문 (`fitness.ai.base-url`). **로그인 필수 — SecurityConfig [직접구현]** |
 
 ## 패키지 구조

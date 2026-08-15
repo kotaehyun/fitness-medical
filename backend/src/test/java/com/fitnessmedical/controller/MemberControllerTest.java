@@ -93,8 +93,9 @@ class MemberControllerTest {
                 "건강 습관 만들기",
                 10,
                 "확인 필요",
+                null,
+                null,
                 null
-
         );
 
         given(memberService.create(any(MemberCreateRequest.class)))

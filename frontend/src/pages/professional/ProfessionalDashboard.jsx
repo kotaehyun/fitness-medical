@@ -18,6 +18,7 @@ import {
   FileCheck2,
   Gauge,
   MessageSquareText,
+  MessagesSquare,
   UserRound,
   Users,
 } from 'lucide-react';
@@ -31,6 +32,7 @@ import { useMembers } from '../../hooks/useDashboardData';
 export const professionalNav = [
   { label: '대시보드', path: '/professional', icon: Gauge },
   { label: '회원 관리', path: '/professional/members', icon: Users },
+  { label: '메시지', path: '/professional/messages', icon: MessagesSquare },
 ];
 export function ProfessionalDashboard() {
   const { account, demoRole } = useAuthSession();

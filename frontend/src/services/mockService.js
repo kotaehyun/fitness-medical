@@ -82,4 +82,49 @@ export const mockService = {
       sources: [],
     };
   },
+
+  async getChatPeers() {
+    await delay();
+    const demoRole = sessionStorage.getItem('fitness-demo-role');
+    if (demoRole === 'PROFESSIONAL') {
+      return [
+        { accountId: 1, displayName: '김순자', peerLabel: '담당 회원' },
+        { accountId: 2, displayName: '김길명', peerLabel: '함께 맡은 트레이너' },
+      ];
+    }
+    return [
+      { accountId: 3, displayName: '홍길동', peerLabel: '담당 전문의' },
+      { accountId: 2, displayName: '김길명', peerLabel: '담당 트레이너' },
+    ];
+  },
+
+  async getChatMessages(peerAccountId) {
+    await delay();
+    return mockMessages.filter(
+      (message) =>
+        (message.senderAccountId === 1 && message.receiverAccountId === peerAccountId) ||
+        (message.receiverAccountId === 1 && message.senderAccountId === peerAccountId) ||
+        (message.senderAccountId === 3 && message.receiverAccountId === peerAccountId) ||
+        (message.receiverAccountId === 3 && message.senderAccountId === peerAccountId)
+    );
+  },
+
+  async sendChatMessage(peerAccountId, body) {
+    await delay(200);
+    const demoRole = sessionStorage.getItem('fitness-demo-role');
+    const senderAccountId = demoRole === 'PROFESSIONAL' ? 3 : 1;
+    const senderDisplayName = demoRole === 'PROFESSIONAL' ? '홍길동' : '김순자';
+    const created = {
+      id: Date.now(),
+      senderAccountId,
+      receiverAccountId: peerAccountId,
+      senderDisplayName,
+      body,
+      createdAt: new Date().toISOString(),
+    };
+    mockMessages.push(created);
+    return created;
+  },
 };
+
+const mockMessages = [];

@@ -19,6 +19,7 @@ import {
   HeartPulse,
   Home,
   MessageSquareText,
+  MessagesSquare,
   Moon,
   Sparkles,
   Weight,
@@ -35,6 +36,7 @@ export const memberNav = [
   { label: '건강 기록', path: '/member/records', icon: ClipboardList },
   { label: '생활 습관 안내', path: '/member/guide', icon: Sparkles },
   { label: '전문가 피드백', path: '/member/feedback', icon: MessageSquareText },
+  { label: '메시지', path: '/member/messages', icon: MessagesSquare },
 ];
 export function MemberDashboard() {
   const member = useMemberData();

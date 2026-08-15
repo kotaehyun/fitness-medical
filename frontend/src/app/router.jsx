@@ -20,6 +20,7 @@ import { StateView } from '../components/common/StateView';
 import { LoginPage } from '../pages/auth/LoginPage';
 import { SignupPage } from '../pages/auth/SignupPage';
 import { PlaceholderPage } from '../pages/common/PlaceholderPage';
+import { MessagesPage } from '../pages/common/MessagesPage';
 import { PrivacyPage } from '../pages/common/PrivacyPage';
 import { LandingPage } from '../pages/landing/LandingPage';
 import { HealthRecordsPage } from '../pages/member/HealthRecordsPage';
@@ -95,6 +96,14 @@ export function AppRouter() {
         }
       />
       <Route
+        path="/member/messages"
+        element={
+          <ProtectedRoute allowedRole="MEMBER">
+            <MessagesPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/member/*"
         element={
           <ProtectedRoute allowedRole="MEMBER">
@@ -123,6 +132,14 @@ export function AppRouter() {
         element={
           <ProtectedRoute allowedRole="PROFESSIONAL">
             <MemberManagementPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/professional/messages"
+        element={
+          <ProtectedRoute allowedRole="PROFESSIONAL">
+            <MessagesPage professional />
           </ProtectedRoute>
         }
       />

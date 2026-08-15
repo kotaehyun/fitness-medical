@@ -27,6 +27,8 @@ export const members = [
     conditions: ['고혈압', '관절 불편'],
     avatar: '김',
     lastMeasured: '2026-07-19',
+    physicianDisplayName: '홍길동',
+    trainerDisplayName: '김길명',
   },
   {
     id: 'm2',

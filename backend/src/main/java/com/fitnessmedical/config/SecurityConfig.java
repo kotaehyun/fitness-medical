@@ -93,6 +93,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         // 건강·회원 데이터는 로그인 필수. 본인 소유권은 Service에서 검증
                         .requestMatchers("/api/members/**").authenticated()
+                        .requestMatchers("/api/messages/**").authenticated()
                         // region [직접구현] AI 생활안내 API 인증
                         // Q. 왜 /api/** permitAll 보다 앞에 두나?
                         // A. Spring Security는 위에서 아래로 첫 매칭만 쓴다.

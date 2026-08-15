@@ -24,14 +24,24 @@ public record MemberResponse(
         String goal,
         int progress,
         String status,              // MemberStatus.getLabel() — "양호" 등 한글
-        LocalDate lastMeasuredDate
+        LocalDate lastMeasuredDate,
+        String physicianDisplayName,
+        String trainerDisplayName
 ) {
-    // Entity → DTO 변환. LAZY 연관 객체 추가 로딩 없이 Member 필드만 사용
     public static MemberResponse from(Member member) {
+        return from(member, null, null);
+    }
+
+    public static MemberResponse from(
+            Member member,
+            String physicianDisplayName,
+            String trainerDisplayName
+    ) {
         return new MemberResponse(
                 member.getId(), member.getName(), member.getGender(), member.getAge(),
                 member.getHeight(), member.getWeight(), member.getGoal(), member.getProgress(),
-                member.getStatus().getLabel(), member.getLastMeasuredDate()
+                member.getStatus().getLabel(), member.getLastMeasuredDate(),
+                physicianDisplayName, trainerDisplayName
         );
     }
 }

@@ -6,8 +6,10 @@ import com.fitnessmedical.dto.member.MemberCreateRequest;
 import com.fitnessmedical.dto.member.MemberResponse;
 import com.fitnessmedical.dto.member.MemberUpdateRequest;
 import com.fitnessmedical.entity.Member;
+import com.fitnessmedical.entity.MemberAssignment;
 import com.fitnessmedical.entity.MemberStatus;
 import com.fitnessmedical.repository.AccountRepository;
+import com.fitnessmedical.repository.MemberAssignmentRepository;
 import com.fitnessmedical.repository.MemberRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,13 +41,16 @@ public class MemberService {
 
     private final MemberRepository memberRepository;
     private final AccountRepository accountRepository;
+    private final MemberAssignmentRepository memberAssignmentRepository;
 
     public MemberService(
             MemberRepository memberRepository,
-            AccountRepository accountRepository
+            AccountRepository accountRepository,
+            MemberAssignmentRepository memberAssignmentRepository
     ) {
         this.memberRepository = memberRepository;
         this.accountRepository = accountRepository;
+        this.memberAssignmentRepository = memberAssignmentRepository;
     }
 
     /**
@@ -54,7 +59,7 @@ public class MemberService {
      */
     public List<MemberResponse> findAll() {
         return memberRepository.findAll().stream()
-                .map(MemberResponse::from)
+                .map(this::toResponse)
                 .toList();
     }
 
@@ -62,7 +67,7 @@ public class MemberService {
      * [공부/면접] ID로 회원 한 명을 조회합니다. 없으면 getMember()에서 404 예외가 발생합니다.
      */
     public MemberResponse findById(Long id) {
-        return MemberResponse.from(getMember(id));
+        return toResponse(getMember(id));
     }
 
     /**
@@ -97,7 +102,7 @@ public class MemberService {
 
         Member saved = memberRepository.save(member);
 
-        return MemberResponse.from(saved);
+        return toResponse(saved);
 
     }
 
@@ -116,7 +121,7 @@ public class MemberService {
 
         member.changeGoal(request.goal(), request.progress());
 
-        return MemberResponse.from(member);
+        return toResponse(member);
     }
 
     /**
@@ -135,5 +140,24 @@ public class MemberService {
         }
 
         memberRepository.delete(member);
+    }
+
+    private MemberResponse toResponse(Member member) {
+        if (member.getId() == null) {
+            return MemberResponse.from(member);
+        }
+        return memberAssignmentRepository.findByMember_Id(member.getId())
+                .map(this::toResponse)
+                .orElseGet(() -> MemberResponse.from(member));
+    }
+
+    private MemberResponse toResponse(MemberAssignment assignment) {
+        String physicianName = assignment.getPhysician() == null
+                ? null
+                : assignment.getPhysician().getDisplayName();
+        String trainerName = assignment.getTrainer() == null
+                ? null
+                : assignment.getTrainer().getDisplayName();
+        return MemberResponse.from(assignment.getMember(), physicianName, trainerName);
     }
 }

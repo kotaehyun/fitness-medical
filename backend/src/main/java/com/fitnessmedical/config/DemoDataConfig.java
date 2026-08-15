@@ -5,11 +5,13 @@ import com.fitnessmedical.entity.AccountRole;
 import com.fitnessmedical.entity.Feedback;
 import com.fitnessmedical.entity.HealthRecord;
 import com.fitnessmedical.entity.Member;
+import com.fitnessmedical.entity.MemberAssignment;
 import com.fitnessmedical.entity.MemberStatus;
 import com.fitnessmedical.entity.ProfessionalType;
 import com.fitnessmedical.repository.AccountRepository;
 import com.fitnessmedical.repository.FeedbackRepository;
 import com.fitnessmedical.repository.HealthRecordRepository;
+import com.fitnessmedical.repository.MemberAssignmentRepository;
 import com.fitnessmedical.repository.MemberRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -51,12 +53,18 @@ public class DemoDataConfig {
                         HealthRecordRepository healthRecordRepository,
                         FeedbackRepository feedbackRepository,
                         AccountRepository accountRepository,
+                        MemberAssignmentRepository memberAssignmentRepository,
                         PasswordEncoder passwordEncoder) {
                 return args -> {
                         if (accountRepository.existsByLoginId("member01")
                             || accountRepository.existsByLoginId("trainer01")
                             || accountRepository.existsByLoginId("doctor01")
                             || accountRepository.existsByLoginId("admin01")) {
+                            ensureKimSunjaAssignment(
+                                    memberRepository,
+                                    accountRepository,
+                                    memberAssignmentRepository
+                            );
                             return;
                         }
                         // saveAll은 여러 Entity를 한 번에 저장합니다.
@@ -138,6 +146,31 @@ public class DemoDataConfig {
                                                         null
                                         )
                         ));
+                        ensureKimSunjaAssignment(
+                                memberRepository,
+                                accountRepository,
+                                memberAssignmentRepository
+                        );
                 };
+        }
+
+        private static void ensureKimSunjaAssignment(
+                MemberRepository memberRepository,
+                AccountRepository accountRepository,
+                MemberAssignmentRepository memberAssignmentRepository
+        ) {
+                Member kim = memberRepository.findAll().stream()
+                        .filter(member -> "김순자".equals(member.getName()))
+                        .findFirst()
+                        .orElse(null);
+                Account doctor = accountRepository.findByLoginId("doctor01").orElse(null);
+                Account trainer = accountRepository.findByLoginId("trainer01").orElse(null);
+                if (kim == null || kim.getId() == null || doctor == null || trainer == null) {
+                        return;
+                }
+                if (memberAssignmentRepository.findByMember_Id(kim.getId()).isPresent()) {
+                        return;
+                }
+                memberAssignmentRepository.save(new MemberAssignment(kim, doctor, trainer));
         }
 }
