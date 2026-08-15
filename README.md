@@ -32,3 +32,18 @@ Fitness_medical/
 
 역할별 세션 로그인, Account–Member 소유권, 전문직 관리자 승인, 건강 기록·피드백,
 Spring `POST /api/ai/ask`(로그인 필수)로 생활 안내 RAG를 붙인 학습·시연용 프로젝트입니다.
+
+## 역할별 시연
+
+시드 계정 아이디: `member01` / `trainer01` / `doctor01` / `admin01`.
+비밀번호는 [`backend/README.md`](./backend/README.md)만 본다.
+
+| 역할 | 화면 | 확인 |
+|------|------|------|
+| MEMBER | `/member` → 기록, 안내, 피드백 | 본인 데이터만. `/member/guide`에서 생활 질문 |
+| PROFESSIONAL (미인증) | 공개 가입 직후 | 회원 목록·피드백은 403 |
+| PROFESSIONAL (인증) | `/professional` → 회원 관리 | 관리자가 승인한 뒤 기록·피드백 |
+| ADMIN | `/admin` | 전문직 승인/해제·가입 현황. 건강 API는 이 역할로 열지 않음 |
+
+핵심: 세션 로그인, 소유권, 전문직 승인, 생활 안내 RAG.  
+실험·이후: 예약, 설정, CSRF, Flyway, 웨어러블, 모델 학습. 진단·처방 API가 아니다.
