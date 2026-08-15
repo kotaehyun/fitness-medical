@@ -1,3 +1,15 @@
+/**
+ * [공부/면접] Recharts 건강 차트 (HealthCharts.jsx)
+ *
+ * Q. slice + reverse 패턴?
+ * A. mock/API records는 최신순일 수 있음 → 차트는 과거→현재 좌→우 표시 위해 reverse.
+ *
+ * Q. fmt() date label?
+ * A. '2026-07-19' → '7/19' 축 라벨 단순화.
+ *
+ * Q. BloodPressureChart domain [70,130] ?
+ * A. Y축 스케일 고정으로 시연 데이터 변동을 한눈에 — 의료 reference range 아님.
+ */
 import {
   Area,
   AreaChart,

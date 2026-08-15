@@ -1,6 +1,17 @@
+/**
+ * [공부/면접] 회원 대시보드 (MemberDashboard.jsx)
+ *
+ * Q. memberNav export 이유는?
+ * A. router PlaceholderPage, HealthRecordsPage 등에서 동일 사이드바 메뉴 재사용.
+ *
+ * Q. useMemberData()에 id를 안 넘기면?
+ * A. resolveMemberId가 account-member-id 또는 demo MEMBER의 m1을 선택.
+ *
+ * Q. status/요약 문구는 의료 판정인가?
+ * A. 아니다. lifestyle·코칭 맥락의 종합 흐름 표시(시연 데이터).
+ */
 import {
   Activity,
-  CalendarDays,
   ChevronRight,
   ClipboardList,
   Droplets,
@@ -9,8 +20,7 @@ import {
   Home,
   MessageSquareText,
   Moon,
-  Settings,
-  Target,
+  Sparkles,
   Weight,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -23,10 +33,8 @@ import { useFeedback, useMemberData, useRecords } from '../../hooks/useDashboard
 export const memberNav = [
   { label: '홈', path: '/member', icon: Home },
   { label: '건강 기록', path: '/member/records', icon: ClipboardList },
-  { label: '목표 관리', path: '/member/goals', icon: Target },
+  { label: '생활 습관 안내', path: '/member/guide', icon: Sparkles },
   { label: '전문가 피드백', path: '/member/feedback', icon: MessageSquareText },
-  { label: '예약', path: '/member/appointments', icon: CalendarDays },
-  { label: '설정', path: '/member/settings', icon: Settings },
 ];
 export function MemberDashboard() {
   const member = useMemberData();
@@ -46,6 +54,8 @@ export function MemberDashboard() {
     );
   const m = member.data,
     rs = records.data;
+  const latestRecord = [...rs].sort((a, b) => b.date.localeCompare(a.date))[0];
+  const latestDetail = latestRecord ? `${latestRecord.date} 측정` : '측정 기록 없음';
   return (
     <AppShell nav={memberNav}>
       <div className="page-head">
@@ -73,7 +83,12 @@ export function MemberDashboard() {
           </p>
         </div>
         <div className="summary-progress">
-          <div className="donut" style={{ '--value': `${m.progress * 3.6}deg` }}>
+          <div
+            className="donut"
+            style={/** @type {import('react').CSSProperties} */ ({
+              '--value': `${m.progress * 3.6}deg`,
+            })}
+          >
             <div>
               <b>{m.progress}%</b>
               <span>목표 달성률</span>
@@ -89,33 +104,33 @@ export function MemberDashboard() {
         <MetricCard
           icon={HeartPulse}
           label="혈압"
-          value="120/80"
+          value={latestRecord ? `${latestRecord.systolic}/${latestRecord.diastolic}` : '—'}
           unit="mmHg"
-          detail="최근 측정 · 오늘 오전 8:20"
+          detail={latestDetail}
           tone="mint"
         />
         <MetricCard
           icon={Droplets}
           label="혈당"
-          value="102"
+          value={latestRecord ? latestRecord.bloodSugar : '—'}
           unit="mg/dL"
-          detail="최근 측정 · 오늘 오전 8:25"
+          detail={latestDetail}
           tone="blue"
         />
         <MetricCard
           icon={Weight}
           label="체중"
-          value="68.0"
+          value={latestRecord ? latestRecord.weight : '—'}
           unit="kg"
-          detail="지난주 대비 -0.5kg"
+          detail={latestDetail}
           tone="navy"
         />
         <MetricCard
           icon={Footprints}
           label="걸음 수"
-          value="7,500"
+          value={latestRecord ? latestRecord.steps.toLocaleString() : '—'}
           unit="보"
-          detail="일일 목표의 75%"
+          detail={latestRecord ? '최근 측정 기록' : '측정 기록 없음'}
           tone="amber"
         />
       </div>
@@ -162,6 +177,9 @@ export function MemberDashboard() {
     </AppShell>
   );
 }
+/**
+ * @param {{ title: string, subtitle?: string, link?: string }} props
+ */
 function CardHead({ title, subtitle, link }) {
   return (
     <div className="card-head">

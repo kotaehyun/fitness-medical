@@ -18,20 +18,36 @@ Java 21과 Gradle Wrapper가 준비되어 있습니다.
 
 ```bash
 cd backend
-./gradlew bootRun
+SERVER_PORT=8081 ./gradlew bootRun
 ```
 
-기본 `local` 프로필은 메모리 H2 DB를 사용하고 애플리케이션 시작 시 시연 데이터를 생성합니다.
+이 기기에서 8080은 Oracle XML DB와 겹칩니다. `local` 프로필은 **파일 H2**(`backend/data/`)입니다. 재시작해도 공개 가입이 남고, 시드 계정(`member01` 등)이 있으면 시드를 다시 넣지 않습니다.
+
+로컬 데모 계정(비밀번호 모두 `password123`):
+
+| loginId | 역할 |
+|---|---|
+| `member01` | 회원(김순자) |
+| `trainer01` | 트레이너(자격번호 `SP21001234`, 시드 인증 완료) |
+| `doctor01` | 전문의(면허 `123456`, 시드 인증 완료) |
+| `admin01` | 관리자(가입 현황 + 전문직 승인/해제) |
+
+공개 회원가입으로 만든 전문가는 `professionalVerified=false`라서 회원 API·피드백을 쓸 수 없습니다. `admin01`로 로그인하면 일반 회원 가입 현황과 전문직 승인을 볼 수 있습니다. 시드 전문가(`trainer01`/`doctor01`)는 이미 인증된 상태입니다.
 
 ## API
 
 | Method | URL | 설명 |
 |---|---|---|
+| GET | `/api/admin/members` | 일반 회원 가입 현황(관리자) |
+| GET | `/api/admin/professionals` | 전문직 목록(관리자, 미인증 우선) |
+| POST | `/api/admin/professionals/{id}/verify` | 전문직 인증 승인(관리자) |
+| POST | `/api/admin/professionals/{id}/revoke` | 전문직 인증 해제(관리자) |
 | GET | `/api/members` | 전체 회원 조회 |
 | GET | `/api/members/{id}` | 회원 상세 조회 |
 | GET | `/api/members/{id}/records` | 회원 건강 기록 조회 |
 | POST | `/api/members/{id}/records` | 건강 기록 등록 |
 | GET | `/api/members/{id}/feedback` | 회원 피드백 조회 |
+| POST | `/api/ai/ask` | FastAPI RAG 생활 안내 질문 (`fitness.ai.base-url`). **로그인 필수 — SecurityConfig [직접구현]** |
 
 ## 패키지 구조
 
@@ -71,13 +87,13 @@ Spring Boot는 기본 설정 파일과 현재 활성화된 프로필 설정 파�
 | 파일 | 용도 |
 |---|---|
 | `application.yml` | 서버 포트, JSON, JPA, 로깅 등 모든 환경의 공통 설정 |
-| `application-local.yml` | 기본 학습 환경인 메모리 H2 설정 |
+| `application-local.yml` | 기본 학습 환경인 파일 H2 설정 |
 | `application-mysql.yml` | Docker MySQL 8.4 연결과 커넥션 풀 설정 |
 
 아무 옵션 없이 실행하면 `local`이 기본 적용됩니다.
 
 ```bash
-./gradlew bootRun
+SERVER_PORT=8081 ./gradlew bootRun
 ```
 
 IntelliJ에서 MySQL 프로필을 사용할 때는 Run Configuration의 Environment variables에
@@ -85,18 +101,48 @@ IntelliJ에서 MySQL 프로필을 사용할 때는 Run Configuration의 Environm
 
 ## MySQL 실행
 
-기존 MariaDB는 3306 포트로 유지하고, Fitness Medical의 MySQL 8.4는 Docker에서 3307 포트로 실행합니다. 실행 방법은 [`../docker/README.md`](../docker/README.md)를 참고하세요.
+기존 MariaDB는 3306 포트로 유지합니다. Fitness Medical Docker MySQL 호스트 포트는 환경마다 다를 수 있습니다.
+**RTX 4090 노트북** 기본값은 `3308`입니다(이 머신에서 `3307`은 로컬 mysqld가 사용). Mac 등에서는 `3307` 등 다른 포트를 쓸 수 있습니다.
+자세한 내용은 [`../docker/README.md`](../docker/README.md)를 참고하세요.
 
 ```bash
 SPRING_PROFILES_ACTIVE=mysql ./gradlew bootRun
 ```
 
-환경변수로 연결 정보를 변경할 수도 있습니다.
+환경변수로 연결 정보를 변경할 수도 있습니다. (예시는 RTX 4090 노트북의 `3308` 기준)
 
 ```bash
 SPRING_PROFILES_ACTIVE=mysql \
-DB_URL='jdbc:mysql://localhost:3307/fitness_medical?serverTimezone=Asia/Seoul&characterEncoding=UTF-8' \
+DB_URL='jdbc:mysql://localhost:3308/fitness_medical?serverTimezone=Asia/Seoul&characterEncoding=UTF-8' \
 DB_USERNAME=fitness_user \
 DB_PASSWORD=fitness_dev_2026 \
 ./gradlew bootRun
 ```
+
+## 프론트엔드 연동
+
+프론트 개발 서버 `http://localhost:5173`과 `http://localhost:5174`에서 `/api/**`를 호출할 수 있도록 CORS가 설정되어 있습니다. 세션 로그인은 `JSESSIONID` 쿠키를 사용하므로 프론트 요청에 credentials 포함이 필요합니다. CORS 또는 서버 포트를 변경한 뒤에는 백엔드를 재시작해야 합니다.
+
+## AI 서비스 연동
+
+`POST /api/ai/ask`는 FastAPI의 `POST /ask`를 중계합니다. 기본 URL은 `application.yml`의 `fitness.ai.base-url`이며, 환경변수 `AI_BASE_URL`로 덮어쓸 수 있습니다.
+
+```bash
+# FastAPI (별도 터미널)
+cd ai-service
+.\.venv\Scripts\activate
+uvicorn app.main:app --reload --port 8000
+
+# Spring (AI_BASE_URL 기본값 http://127.0.0.1:8000)
+cd backend
+.\gradlew.bat bootRun
+```
+
+요청 예:
+
+```json
+POST /api/ai/ask
+{ "query": "잠은 어떻게 자면 좋나요?", "nResults": 5 }
+```
+
+AI 서비스가 꺼져 있거나 타임아웃이면 `503`과 안내 메시지를 반환합니다. 의료 진단·처방 API가 아닙니다.

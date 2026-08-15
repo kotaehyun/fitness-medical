@@ -2,6 +2,7 @@
 
 ```mermaid
 erDiagram
+    MEMBERS ||--o| ACCOUNTS : "회원은 계정 0~1개"
     MEMBERS ||--o{ HEALTH_RECORDS : "회원은 건강 기록을 작성한다"
     MEMBERS ||--o{ FEEDBACKS : "회원은 전문가 피드백을 받는다"
 
@@ -16,6 +17,18 @@ erDiagram
         INT progress "목표 진행률"
         VARCHAR status "종합 상태"
         DATE last_measured_date "최근 측정일"
+    }
+
+    ACCOUNTS {
+        BIGINT id PK "계정 ID"
+        VARCHAR login_id UK "로그인 아이디"
+        VARCHAR password "암호화된 비밀번호"
+        VARCHAR display_name "표시 이름"
+        VARCHAR role "MEMBER, PROFESSIONAL 또는 ADMIN"
+        VARCHAR professional_type "TRAINER 또는 PHYSICIAN"
+        VARCHAR license_number UK "전문의 면허 또는 트레이너 자격번호(NULL 허용)"
+        BOOLEAN professional_verified "전문직 인증 여부"
+        BIGINT member_id FK_UK "연결 회원(없으면 null)"
     }
 
     HEALTH_RECORDS {
@@ -43,6 +56,10 @@ erDiagram
 
 ## 관계 해석
 
+### MEMBERS → ACCOUNTS
+
+`1:0..1` 관계입니다. MEMBER 역할 계정만 `member_id`로 회원과 연결되고, PROFESSIONAL·ADMIN은 `member_id`가 null입니다. `member_id`는 UNIQUE라서 한 회원당 계정은 최대 1개입니다. ADMIN은 공개 가입 불가(시드)이며 전문직 `professional_verified`만 승인/해제합니다.
+
 ### MEMBERS → HEALTH_RECORDS
 
 `1:N` 관계입니다. 한 회원에게 건강 기록이 여러 개 존재할 수 있지만, 건강 기록 하나는 한 명의 회원에게만 속합니다.
@@ -55,7 +72,6 @@ erDiagram
 
 다음 기능을 직접 구현할 때 ERD에 추가합니다.
 
-- `users`: 로그인 계정
 - `professionals`: 의료 전문가와 트레이너 정보
 - `goals`: 회원별 건강 목표
 - `appointments`: 회원과 전문가 예약

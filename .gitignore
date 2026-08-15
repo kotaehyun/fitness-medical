@@ -5,6 +5,7 @@ frontend/dist/
 # Backend
 backend/.gradle/
 backend/build/
+backend/data/
 
 # IDE / OS
 .idea/
@@ -12,3 +13,11 @@ backend/build/
 .DS_Store
 *.iml
 .vite/
+.claude/
+
+
+# AI service
+ai-service/.venv/
+ai-service/__pycache__/
+ai-service/**/__pycache__/
+ai-service/chroma_data/

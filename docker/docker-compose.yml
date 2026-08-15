@@ -6,9 +6,11 @@ services:
     container_name: fitness-medical-mysql
     restart: unless-stopped
     ports:
-      # Mac의 3307 포트를 컨테이너 MySQL 기본 포트 3306에 연결합니다.
-      # 기존 MariaDB 3306과 충돌하지 않습니다.
-      - "3307:3306"
+      # 호스트 포트는 환경마다 다를 수 있습니다.
+      # RTX 4090 노트북(Windows): 3308 → 컨테이너 3306
+      #   (이 머신에선 로컬 mysqld가 3307을 사용 중)
+      # Mac 등 다른 환경: 보통 3307 또는 해당 PC에서 비어 있는 포트로 변경
+      - "3308:3306"
     environment:
       MYSQL_ROOT_PASSWORD: root_dev_2026
       MYSQL_DATABASE: fitness_medical
@@ -27,5 +29,24 @@ services:
       timeout: 5s
       retries: 20
 
+  # RAG Document/Chunk용 (MySQL과 역할 분리)
+  mongodb:
+    image: mongo:7
+    container_name: fitness-medical-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: fitness_medical_ai
+      TZ: Asia/Seoul
+    volumes:
+      - fitness_mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
 volumes:
   fitness_mysql_data:
+  fitness_mongo_data:

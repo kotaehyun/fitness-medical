@@ -1,3 +1,20 @@
+/**
+ * [공부/면접] 로그인·데모 진입 (LoginPage.jsx)
+ *
+ * Q. 실제 로그인 vs 데모 체험 흐름 차이는?
+ * A. 로그인: apiService.login → 세션 쿠키 + account-member-id 저장 → role별 redirect.
+ *    데모: sessionStorage 'fitness-demo-role'만 설정, API 인증 없이 ProtectedRoute 통과.
+ *
+ * Q. account-member-id sessionStorage 용도는?
+ * A. MEMBER 계정 로그인 시 연결된 memberId(m1 등)를 저장.
+ *    useDashboardData·apiService.addRecord가 "누구의 기록인지" 판별할 때 사용.
+ *
+ * Q. 로그인 성공 시 fitness-demo-role remove ?
+ * A. 이전 데모 세션과 실계정 세션이 충돌하지 않도록 demo 플래그를 지운다.
+ *
+ * Q. 보안 — password 처리 주의점?
+ * A. state에만 보관, 전송 후 로그/에러 메시지에 포함하지 않는다.
+ */
 import {
   ArrowLeft,
   ArrowRight,
@@ -7,13 +24,69 @@ import {
   LockKeyhole,
   Mail,
 } from 'lucide-react';
+import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Logo } from '../../components/common/Logo';
 import { Disclaimer } from '../../components/common/Disclaimer';
+import { apiService } from '../../services/apiService';
+import { cacheAuthAccount, homePath, useAuthSession, useLogout } from '../../hooks/useAuthSession';
+
 export function LoginPage() {
   const nav = useNavigate();
+  const queryClient = useQueryClient();
+  const { isAuthenticated, isLoading, role, account } = useAuthSession();
+  const logout = useLogout('/login');
   const [params] = useSearchParams();
   const preferred = params.get('role');
+  const [loginId, setLoginId] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      const account = await apiService.login(loginId, password);
+      // 실계정 로그인 — 데모 role 플래그 제거. /auth/me 401 캐시도 덮어쓴다.
+      sessionStorage.removeItem('fitness-demo-role');
+      const currentAccount = account?.role ? account : await apiService.getCurrentAccount();
+      cacheAuthAccount(queryClient, currentAccount);
+      if (currentAccount.memberId) {
+        // [면접] MEMBER 전용 — 이후 GET/POST records 경로에 사용
+        sessionStorage.setItem('account-member-id', currentAccount.memberId);
+      } else {
+        sessionStorage.removeItem('account-member-id');
+      }
+      const nextRole = String(currentAccount?.role || '').toUpperCase();
+      const nextPath = homePath(nextRole);
+      if (nextPath === '/') {
+        setError('로그인한 계정의 역할을 확인할 수 없습니다.');
+      } else {
+        nav(nextPath);
+      }
+    } catch (requestError) {
+      // [면접] 에러 메시지에 password 포함 금지 — loginId만 사용자에게 안내
+      // checkJs: catch는 unknown → instanceof Error 후에만 .message
+      const message =
+        requestError instanceof Error
+          ? requestError.message
+          : '로그인에 실패했습니다. 아이디와 비밀번호를 확인해 주세요.';
+      setError(message || '로그인에 실패했습니다. 아이디와 비밀번호를 확인해 주세요.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function enterDemo(role) {
+    // [면접] 데모 MEMBER → useDashboardData가 m1 사용 / PROFESSIONAL → useMembers 등
+    sessionStorage.setItem('fitness-demo-role', role);
+    nav(role === 'PROFESSIONAL' ? '/professional' : '/member');
+  }
+
   return (
     <div className="login-page">
       <div className="login-side">
@@ -46,11 +119,37 @@ export function LoginPage() {
           </div>
           <span className="eyebrow">DEMO ACCOUNT</span>
           <h2>Fitness Medical 시작하기</h2>
+          {isLoading ? (
+            <p>로그인 상태를 확인하고 있습니다.</p>
+          ) : isAuthenticated ? (
+            <>
+              <p>
+                지금 <b>{account?.displayName || '계정'}</b>으로 로그인되어 있습니다.
+                다른 계정은 로그아웃 후 이용하세요.
+              </p>
+              <div className="demo-buttons">
+                <button type="button" onClick={() => nav(homePath(role))}>
+                  <span className="demo-icon">
+                    <HeartPulse />
+                  </span>
+                  <span>
+                    <b>대시보드로 이동</b>
+                    <small>현재 계정으로 계속하기</small>
+                  </span>
+                  <ArrowRight />
+                </button>
+              </div>
+              <button className="button primary full" type="button" onClick={logout}>
+                로그아웃
+              </button>
+            </>
+          ) : (
+            <>
           <p>체험할 역할을 선택하거나 계정으로 로그인하세요.</p>
           <div className="demo-buttons">
             <button
               className={preferred === 'member' ? 'selected' : ''}
-              onClick={() => nav('/member')}
+              onClick={() => enterDemo('MEMBER')}
             >
               <span className="demo-icon">
                 <HeartPulse />
@@ -63,7 +162,7 @@ export function LoginPage() {
             </button>
             <button
               className={preferred === 'professional' ? 'selected' : ''}
-              onClick={() => nav('/professional')}
+              onClick={() => enterDemo('PROFESSIONAL')}
             >
               <span className="demo-icon navy">
                 <BriefcaseMedical />
@@ -78,24 +177,33 @@ export function LoginPage() {
           <div className="or">
             <span>또는 계정으로 로그인</span>
           </div>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              nav('/member');
-            }}
-          >
+          <form onSubmit={handleSubmit}>
             <label>
-              이메일
+              로그인 아이디
               <div className="input-wrap">
                 <Mail />
-                <input type="email" placeholder="name@example.com" required />
+                <input
+                  type="text"
+                  value={loginId}
+                  onChange={(event) => setLoginId(event.target.value)}
+                  placeholder="예: member01, admin01"
+                  autoComplete="username"
+                  required
+                />
               </div>
             </label>
             <label>
               비밀번호
               <div className="input-wrap">
                 <LockKeyhole />
-                <input type="password" placeholder="비밀번호를 입력하세요" required />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder="비밀번호를 입력하세요"
+                  autoComplete="current-password"
+                  required
+                />
                 <Eye />
               </div>
             </label>
@@ -105,10 +213,17 @@ export function LoginPage() {
               </label>
               <button type="button">비밀번호 찾기</button>
             </div>
-            <button className="button primary full" type="submit">
-              로그인
+            {error && <p className="form-error" role="alert">{error}</p>}
+            <p className="auth-hint">로컬 시드: member01 · trainer01 · doctor01 · admin01 / password123</p>
+            <button className="button primary full" type="submit" disabled={loading}>
+              {loading ? '로그인 중...' : '로그인'}
             </button>
           </form>
+          <p className="auth-switch">
+            계정이 없나요? <Link to="/signup">회원가입</Link>
+          </p>
+            </>
+          )}
           <Disclaimer />
         </div>
       </main>

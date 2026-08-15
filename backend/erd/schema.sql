@@ -14,6 +14,23 @@ CREATE TABLE members (
     last_measured_date DATE
 );
 
+CREATE TABLE accounts (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    login_id VARCHAR(50) NOT NULL,
+    password VARCHAR(100) NOT NULL,
+    display_name VARCHAR(30) NOT NULL,
+    role VARCHAR(20) NOT NULL, -- MEMBER, PROFESSIONAL, ADMIN
+    professional_type VARCHAR(20) NULL,
+    license_number VARCHAR(20) NULL, -- 전문의 면허 또는 트레이너 자격번호. UNIQUE(NULL 여러 행 허용)
+    professional_verified BOOLEAN NOT NULL DEFAULT FALSE,
+    member_id BIGINT NULL,
+    CONSTRAINT uk_accounts_login_id UNIQUE (login_id),
+    CONSTRAINT uk_accounts_license_number UNIQUE (license_number),
+    CONSTRAINT uk_accounts_member_id UNIQUE (member_id),
+    CONSTRAINT fk_accounts_member
+        FOREIGN KEY (member_id) REFERENCES members(id)
+);
+
 CREATE TABLE health_records (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     member_id BIGINT NOT NULL,

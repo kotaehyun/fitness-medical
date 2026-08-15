@@ -1,32 +1,155 @@
+/**
+ * [공부/면접] 앱 라우팅 (router.jsx)
+ *
+ * Q. ProtectedRoute가 하는 일은?
+ * A. useAuthSession으로 데모 role 또는 /auth/me를 확인한 뒤
+ *    allowedRole과 다르면 리다이렉트, 미인증이면 /login.
+ *
+ * Q. demoRole 있을 때 /auth/me를 안 부르는 이유?
+ * A. 데모 체험은 쿠키 세션 없이 sessionStorage만으로 통과.
+ *    API 호출을 끄면 401·불필요한 로딩을 피한다.
+ *
+ * Q. Route path="/member/*" + PlaceholderPage ?
+ * A. 아직 구현되지 않은 회원 메뉴(목표, 예약 등)를 404 대신 "준비 중"으로 처리.
+ *
+ * Q. Navigate replace vs push ?
+ * A. replace는 history 스택에 남기지 않아 뒤로가기 시 보호 라우트로 재진입을 줄인다.
+ */
 import { Navigate, Route, Routes } from 'react-router-dom';
+import { StateView } from '../components/common/StateView';
 import { LoginPage } from '../pages/auth/LoginPage';
+import { SignupPage } from '../pages/auth/SignupPage';
 import { PlaceholderPage } from '../pages/common/PlaceholderPage';
+import { PrivacyPage } from '../pages/common/PrivacyPage';
 import { LandingPage } from '../pages/landing/LandingPage';
 import { HealthRecordsPage } from '../pages/member/HealthRecordsPage';
+import { MemberFeedbackPage } from '../pages/member/MemberFeedbackPage';
+import { MemberGuidePage } from '../pages/member/MemberGuidePage';
 import { MemberDashboard, memberNav } from '../pages/member/MemberDashboard';
 import { MemberDetailPage } from '../pages/professional/MemberDetailPage';
+import { MemberManagementPage } from '../pages/professional/MemberManagementPage';
 import {
   ProfessionalDashboard,
   professionalNav,
 } from '../pages/professional/ProfessionalDashboard';
+import { AdminVerificationPage, adminNav } from '../pages/admin/AdminVerificationPage';
+import { homePath, useAuthSession } from '../hooks/useAuthSession';
 
-// [발표 핵심] React Router는 현재 URL에 맞는 페이지 컴포넌트를 선택합니다.
-// 공통 메뉴에 아직 구현되지 않은 주소는 PlaceholderPage가 받아서 빈 화면을 방지합니다.
+function ProtectedRoute({ allowedRole, children }) {
+  const { isLoading, isAuthenticated, role } = useAuthSession();
+
+  if (isLoading) {
+    return <StateView type="loading" message="로그인 정보를 확인하고 있습니다." />;
+  }
+
+  if (!isAuthenticated || !role) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (role !== allowedRole) {
+    const next = homePath(role);
+    return <Navigate to={next === '/' ? '/login' : next} replace />;
+  }
+
+  return children;
+}
+
 export function AppRouter() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/member" element={<MemberDashboard />} />
-      <Route path="/member/records" element={<HealthRecordsPage />} />
-      <Route path="/member/*" element={<PlaceholderPage nav={memberNav} />} />
-      <Route path="/professional" element={<ProfessionalDashboard />} />
-      <Route path="/professional/members/:id" element={<MemberDetailPage />} />
+      <Route path="/signup" element={<SignupPage />} />
+      <Route path="/privacy/member" element={<PrivacyPage audience="MEMBER" />} />
+      <Route path="/privacy/professional" element={<PrivacyPage audience="PROFESSIONAL" />} />
+      <Route
+        path="/member"
+        element={
+          <ProtectedRoute allowedRole="MEMBER">
+            <MemberDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/member/records"
+        element={
+          <ProtectedRoute allowedRole="MEMBER">
+            <HealthRecordsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/member/feedback"
+        element={
+          <ProtectedRoute allowedRole="MEMBER">
+            <MemberFeedbackPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/member/guide"
+        element={
+          <ProtectedRoute allowedRole="MEMBER">
+            <MemberGuidePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/member/*"
+        element={
+          <ProtectedRoute allowedRole="MEMBER">
+            <PlaceholderPage nav={memberNav} />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/professional"
+        element={
+          <ProtectedRoute allowedRole="PROFESSIONAL">
+            <ProfessionalDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/professional/members/:id"
+        element={
+          <ProtectedRoute allowedRole="PROFESSIONAL">
+            <MemberDetailPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/professional/members"
+        element={
+          <ProtectedRoute allowedRole="PROFESSIONAL">
+            <MemberManagementPage />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/professional/*"
-        element={<PlaceholderPage nav={professionalNav} professional />}
+        element={
+          <ProtectedRoute allowedRole="PROFESSIONAL">
+            <PlaceholderPage nav={professionalNav} professional />
+          </ProtectedRoute>
+        }
       />
-      {/* 등록되지 않은 주소는 랜딩 페이지로 이동시킵니다. replace는 잘못된 URL을 방문 기록에서 교체합니다. */}
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute allowedRole="ADMIN">
+            <AdminVerificationPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/*"
+        element={
+          <ProtectedRoute allowedRole="ADMIN">
+            <PlaceholderPage nav={adminNav} workspaceLabel="관리자 워크스페이스" />
+          </ProtectedRoute>
+        }
+      />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

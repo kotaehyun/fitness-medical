@@ -1,14 +1,23 @@
+/**
+ * [공부/면접] 전문가 대시보드 (ProfessionalDashboard.jsx)
+ *
+ * Q. professionalNav export 이유는?
+ * A. router·PlaceholderPage·하위 professional 페이지에서 공통 사이드바.
+ *
+ * Q. useMembers() vs useMemberData(id)?
+ * A. 전문가는 전체 회원 목록 조회. 회원 상세는 URL :id로 개별 훅 호출.
+ *
+ * Q. pro-summary 숫자(5, 2, 3…)는 API인가?
+ * A. 일부는 query.data, 일부는 시연용 정적 카드 — 데모 UI 혼합.
+ */
 import {
   AlertCircle,
   BellRing,
   CalendarCheck,
-  CalendarDays,
   ChevronRight,
-  ClipboardList,
   FileCheck2,
   Gauge,
   MessageSquareText,
-  Settings,
   UserRound,
   Users,
 } from 'lucide-react';
@@ -17,17 +26,28 @@ import { ProgressBar } from '../../components/common/ProgressBar';
 import { StateView } from '../../components/common/StateView';
 import { StatusBadge } from '../../components/common/StatusBadge';
 import { AppShell } from '../../components/layout/AppShell';
+import { useAuthSession } from '../../hooks/useAuthSession';
 import { useMembers } from '../../hooks/useDashboardData';
 export const professionalNav = [
   { label: '대시보드', path: '/professional', icon: Gauge },
   { label: '회원 관리', path: '/professional/members', icon: Users },
-  { label: '건강 기록', path: '/professional/records', icon: ClipboardList },
-  { label: '피드백', path: '/professional/feedback', icon: MessageSquareText },
-  { label: '예약', path: '/professional/appointments', icon: CalendarDays },
-  { label: '설정', path: '/professional/settings', icon: Settings },
 ];
 export function ProfessionalDashboard() {
-  const query = useMembers();
+  const { account, demoRole } = useAuthSession();
+  const pendingVerification = !demoRole && account?.professionalVerified === false;
+  const canListMembers =
+    demoRole === 'PROFESSIONAL' || account?.professionalVerified === true;
+  const query = useMembers({ enabled: canListMembers });
+  if (pendingVerification) {
+    return (
+      <AppShell nav={professionalNav} professional>
+        <StateView
+          type="empty"
+          message="전문직 인증 대기 중입니다. 관리자(admin01) 승인 후 회원 목록을 볼 수 있습니다."
+        />
+      </AppShell>
+    );
+  }
   if (query.isLoading)
     return (
       <AppShell nav={professionalNav} professional>
@@ -38,6 +58,12 @@ export function ProfessionalDashboard() {
     return (
       <AppShell nav={professionalNav} professional>
         <StateView type="error" message="회원 정보를 불러오지 못했습니다." />
+      </AppShell>
+    );
+  if (!query.data.length)
+    return (
+      <AppShell nav={professionalNav} professional>
+        <StateView type="empty" message="등록된 회원이 없습니다." />
       </AppShell>
     );
   return (
