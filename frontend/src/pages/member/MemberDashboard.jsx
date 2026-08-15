@@ -12,7 +12,6 @@
  */
 import {
   Activity,
-  CalendarDays,
   ChevronRight,
   ClipboardList,
   Droplets,
@@ -21,9 +20,7 @@ import {
   Home,
   MessageSquareText,
   Moon,
-  Settings,
   Sparkles,
-  Target,
   Weight,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -37,10 +34,7 @@ export const memberNav = [
   { label: '홈', path: '/member', icon: Home },
   { label: '건강 기록', path: '/member/records', icon: ClipboardList },
   { label: '생활 습관 안내', path: '/member/guide', icon: Sparkles },
-  { label: '목표 관리', path: '/member/goals', icon: Target },
   { label: '전문가 피드백', path: '/member/feedback', icon: MessageSquareText },
-  { label: '예약', path: '/member/appointments', icon: CalendarDays },
-  { label: '설정', path: '/member/settings', icon: Settings },
 ];
 export function MemberDashboard() {
   const member = useMemberData();
@@ -89,7 +83,12 @@ export function MemberDashboard() {
           </p>
         </div>
         <div className="summary-progress">
-          <div className="donut" style={{ '--value': `${m.progress * 3.6}deg` }}>
+          <div
+            className="donut"
+            style={/** @type {import('react').CSSProperties} */ ({
+              '--value': `${m.progress * 3.6}deg`,
+            })}
+          >
             <div>
               <b>{m.progress}%</b>
               <span>목표 달성률</span>
@@ -178,6 +177,9 @@ export function MemberDashboard() {
     </AppShell>
   );
 }
+/**
+ * @param {{ title: string, subtitle?: string, link?: string }} props
+ */
 function CardHead({ title, subtitle, link }) {
   return (
     <div className="card-head">

@@ -18,10 +18,10 @@ Java 21과 Gradle Wrapper가 준비되어 있습니다.
 
 ```bash
 cd backend
-./gradlew bootRun
+SERVER_PORT=8081 ./gradlew bootRun
 ```
 
-기본 `local` 프로필은 메모리 H2 DB를 사용하고 애플리케이션 시작 시 시연 데이터를 생성합니다.
+이 기기에서 8080은 Oracle XML DB와 겹칩니다. `local` 프로필은 **파일 H2**(`backend/data/`)입니다. 재시작해도 공개 가입이 남고, 시드 계정(`member01` 등)이 있으면 시드를 다시 넣지 않습니다.
 
 로컬 데모 계정(비밀번호 모두 `password123`):
 
@@ -87,13 +87,13 @@ Spring Boot는 기본 설정 파일과 현재 활성화된 프로필 설정 파�
 | 파일 | 용도 |
 |---|---|
 | `application.yml` | 서버 포트, JSON, JPA, 로깅 등 모든 환경의 공통 설정 |
-| `application-local.yml` | 기본 학습 환경인 메모리 H2 설정 |
+| `application-local.yml` | 기본 학습 환경인 파일 H2 설정 |
 | `application-mysql.yml` | Docker MySQL 8.4 연결과 커넥션 풀 설정 |
 
 아무 옵션 없이 실행하면 `local`이 기본 적용됩니다.
 
 ```bash
-./gradlew bootRun
+SERVER_PORT=8081 ./gradlew bootRun
 ```
 
 IntelliJ에서 MySQL 프로필을 사용할 때는 Run Configuration의 Environment variables에

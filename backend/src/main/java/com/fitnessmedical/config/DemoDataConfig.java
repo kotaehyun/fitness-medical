@@ -53,9 +53,11 @@ public class DemoDataConfig {
                         AccountRepository accountRepository,
                         PasswordEncoder passwordEncoder) {
                 return args -> {
-
-                        if (accountRepository.existsByLoginId("member01")) {
-                                return;
+                        if (accountRepository.existsByLoginId("member01")
+                            || accountRepository.existsByLoginId("trainer01")
+                            || accountRepository.existsByLoginId("doctor01")
+                            || accountRepository.existsByLoginId("admin01")) {
+                            return;
                         }
                         // saveAll은 여러 Entity를 한 번에 저장합니다.
                         List<Member> members = memberRepository.saveAll(List.of(

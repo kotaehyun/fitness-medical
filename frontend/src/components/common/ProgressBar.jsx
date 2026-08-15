@@ -7,6 +7,9 @@
  * Q. aria-label ?
  * A. 시각 bar만 있는 UI에 접근성 이름 제공.
  */
+/**
+ * @param {{ value: number, label?: string }} props
+ */
 export function ProgressBar({ value, label }) {
   return (
     <div className="progress-wrap" aria-label={label ?? `달성률 ${value}%`}>

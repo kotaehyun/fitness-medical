@@ -2,7 +2,7 @@
 
 Fitness Medical 프로젝트의 학습/진행 기록용 문서 폴더입니다. `README.md`, `backend/README.md`, `backend/STUDY_TASKS.md`, `backend/erd/`와 별도로, **작업하면서 남기는 기록**을 모읍니다.
 
-코드를 추가·수정한 세션에서는 **그날 날짜의 `progress/`에 작업 내용 + 오류를 쓰고, 이 INDEX에도 링크를 넣습니다.** 여러 날을 한 파일에 묶지 않습니다. 프론트+백엔드를 한 흐름으로 바꾼 날은 `report/`도 같이 남깁니다.
+**하루를 끝낼 때 그날 안에 문서를 맞춘다.** 코드를 추가·수정했으면 미루지 않고 같은 날 `progress/`를 쓰고, 설계가 바뀌었으면 `decisions/`를 추가·수정하고, 설명용 흐름이 바뀌었으면 `study/`를 추가한다(구현 전 문서는 덮어쓰지 않는다). 이 INDEX에도 링크를 넣는다. 여러 날을 한 파일에 묶지 않는다. 프론트+백엔드를 한 흐름으로 바꾼 날은 `report/`도 같이 남긴다.
 
 ## 카테고리
 
@@ -29,10 +29,12 @@ Fitness Medical 프로젝트의 학습/진행 기록용 문서 폴더입니다. 
 | 2026-08-13 | [ADMIN 승인·세션 UX·가입 현황](./progress/2026-08-13-admin-세션ux-가입현황.md) |
 | 2026-08-14 | [AI /ask 로그인 필수 + 파비콘](./progress/2026-08-14-ai-ask-인증-파비콘.md) |
 | 2026-08-14 | [Repository 테스트 + 파일 H2](./progress/2026-08-14-h2파일-repository테스트.md) |
+| 2026-08-15 | [시드 가드·사이드바·README·문서 규칙](./progress/2026-08-15-시드가드-사이드바-문서규칙.md) |
 
 ### decisions
 
-- [MemberCreateRequest 필드 설계](./decisions/member-create-request-필드-설계.md)
+- [MemberCreateRequest 필드 설계](./decisions/member-create-request-필드-설계.md) (1단계)
+- [계정·역할·소유권](./decisions/계정-역할-소유권.md) (가입·세션·승인)
 
 ### troubleshooting
 
@@ -40,7 +42,8 @@ Fitness Medical 프로젝트의 학습/진행 기록용 문서 폴더입니다. 
 
 ### study
 
-- [STUDY_TASKS 4단계 Session 인증 리뷰](./study/codeReview/step4-session-auth-review.md) (Entity/Repository만, 구현 전)
+- [STUDY_TASKS 4단계 Session 인증 리뷰](./study/codeReview/step4-session-auth-review.md) (Entity/Repository만, **구현 전** — 덮어쓰지 않음)
+- [세션 인증·권한·RAG 입구](./study/codeReview/session-권한-rag-흐름.md) (구현 후)
 
 ### report
 
@@ -49,6 +52,18 @@ Fitness Medical 프로젝트의 학습/진행 기록용 문서 폴더입니다. 
 
 ## 작성 규칙
 
+### 하루 마감 (필수)
+
+작업이 끝나는 그날, 아래를 **바로** 한다. 다음 날로 미루지 않는다.
+
+1. **`progress/`** — 그날 한 일, 설계 결정, 오류, 다음 할 일. 파일명 `YYYY-MM-DD-주제.md`.
+2. **기술 문서** — 설계가 바뀌면 `decisions/` 추가 또는 기존 문서에 재검토 한 줄. 인증·권한·RAG 흐름이 바뀌면 `study/codeReview/`에 **새 파일** (구현 전 노트는 유지).
+3. **이 INDEX** — 새 문서 링크. 카테고리가 비면 행을 넣는다.
+4. **`report/`** — 프론트+백엔드를 한 흐름으로 바꾼 날만. progress와 같이.
+5. **폴더 README** — 실행 방법·포트·환경 변수가 바뀌면 `backend/` `frontend/` `ai-service/` README. 루트 README는 소개+링크만.
+
+### 형식
+
 - 파일명: `YYYY-MM-DD-주제.md`. **한 파일에 여러 날짜를 넣지 않는다.** 같은 날 주제가 갈리면 파일을 나눈다.
-- 새 문서 추가 시 이 INDEX 해당 날짜 행에 링크를 넣는다.
 - 학원 단계·기능 → `progress/` (파일·설계·오류). 풀스택 한 흐름 → `report/` (+ 그날 progress).
+- 비밀번호·면허번호·자격번호를 문서에 쓰지 않는다. 진단·처방 완료처럼 쓰지 않는다.

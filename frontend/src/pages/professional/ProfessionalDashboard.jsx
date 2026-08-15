@@ -14,13 +14,10 @@ import {
   AlertCircle,
   BellRing,
   CalendarCheck,
-  CalendarDays,
   ChevronRight,
-  ClipboardList,
   FileCheck2,
   Gauge,
   MessageSquareText,
-  Settings,
   UserRound,
   Users,
 } from 'lucide-react';
@@ -34,10 +31,6 @@ import { useMembers } from '../../hooks/useDashboardData';
 export const professionalNav = [
   { label: '대시보드', path: '/professional', icon: Gauge },
   { label: '회원 관리', path: '/professional/members', icon: Users },
-  { label: '건강 기록', path: '/professional/records', icon: ClipboardList },
-  { label: '피드백', path: '/professional/feedback', icon: MessageSquareText },
-  { label: '예약', path: '/professional/appointments', icon: CalendarDays },
-  { label: '설정', path: '/professional/settings', icon: Settings },
 ];
 export function ProfessionalDashboard() {
   const { account, demoRole } = useAuthSession();
